@@ -1,0 +1,16 @@
+<launch>
+
+	<arg name="fcu_url" default="/dev/ttyUSB0:921600" />
+	<arg name="gcs_url" default="udp://@192.168.0.105:14550"/>
+	<arg name="tgt_system" default="1" />
+	<arg name="tgt_component" default="1" />
+
+	<include file="$(find mavros)/launch/px4.launch">
+		<arg name="fcu_url" value="$(arg fcu_url)"/>
+		<arg name="gcs_url" value="$(arg gcs_url)"/>
+		<arg name="tgt_system" value="$(arg tgt_system)" />
+		<arg name="tgt_component" value="$(arg tgt_component)" />
+	</include>
+
+	<node pkg="px4_navigation_tests" type="gps_setpoints.py" name="gps_setpoints_node" output="screen"/>
+</launch>
