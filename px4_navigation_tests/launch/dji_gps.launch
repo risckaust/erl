@@ -1,0 +1,6 @@
+<launch>
+    <include 
+        file = "$(find dji_sdk)/launch/sdk.launch"
+    /> 
+    <node pkg="dji_sdk_demo" type = "dji_gps_setpoints.py" name = "dji_gps_setpoint_node" output="screen"/>
+</launch>
