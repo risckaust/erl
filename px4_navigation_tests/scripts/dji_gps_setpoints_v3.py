@@ -7,7 +7,7 @@ import pymap3d as pm # coordinate conversion
 from sensor_msgs.msg import NavSatFix,Joy
 from geometry_msgs.msg import Point, PointStamped
 
-from dji_sdk.srv import SDKControlAuthority,DroneTaskControl,SetLocalPosRef
+from dji_sdk.srv import SDKControlAuthority,DroneTaskControl
 
 class Controller:
 
@@ -27,29 +27,18 @@ class Controller:
 		# Instantiate a setpoint topic structure
 		self.dji_position_sp					=Joy()
 		self.dji_position_sp.axes                               =[0, 0, 0, 0]
- 
+                
+                self.dji_velocity_sp					=Joy()
+		self.dji_velocity_sp.axes                               =[0, 0, 0, 0]
+                 
+                self.last_time                                 = 0
+                self.current_time                              = 0
+
                 self.step_size_x                               = 0
                 self.step_size_y                               = 0
 
 
 		######### Callbacks #########
-        def enableLocalPosition(self):
-                rospy.wait_for_service('dji_sdk/set_local_pos_ref')        
-                try:
-                   s = rospy.ServiceProxy('dji_sdk/set_local_pos_ref',SetLocalPosRef)
-                  
-                   response=s()
-
-                   if response.result:
-                      print "The DJI Local position is enabled"
-
-                   else:
-                      print "DJI Local Position is not enabled"
-
-
-                except rospy.ServiceException, e:
-                    print "Service call failed : %s"%e
-
         def enableSDK(self):
                 rospy.wait_for_service('dji_sdk/sdk_control_authority')        
                 try:
@@ -144,29 +133,39 @@ class Controller:
 
 					i = i +1
 					rate.sleep()
+                               self.last_time = rospy.get_time()
 
-                        if abs(delta_x) < 0.05 and abs(delta_y) < 0.05:
+                        if abs(delta_x) < 0.5 and abs(delta_y) < 0.5:
                                self.land()
+                        
+                        self.current_time=rospy.get_time()
+                        dt = self.last_time-self.current_time
                                                
                         if delta_x > 1:
-                              self.step_size_x=1
+                              self.dji_velocity_sp.axes[0] = 2
+                              self.step_size_x=self.dji_velocity_sp.axes[0]*dt
                         elif delta_x < -1:
-                              self.step_size_x=-1
+                              self.dji_velocity_sp.axes[0] = -2
+                              self.step_size_x=self.dji_velocity_sp.axes[0]*dt
                         else:
+                              self.dji_velocity_sp.axes[0]=0
                               self.step_size_x=delta_x
 
                         if delta_y > 1:
-                              self.step_size_y=1
+                              self.dji_velocity_sp.axes[1] = 2
+                              self.step_size_y=self.dji_velocity_sp.axes[1]*dt
                         elif delta_y < -1:
-                              self.step_size_y=-1
+                              self.dji_velocity_sp.axes[1] = -2
+                              self.step_size_y=self.dji_velocity_sp.axes[1]*dt
                         else:
+                              self.dji_velocity_sp.axes[1] = 0
                               self.step_size_y=delta_y
                                
-			self.dji_position_sp.axes[0] = self.step_size_x
-			self.dji_position_sp.axes[1] = self.step_size_y
-			self.dji_position_sp.axes[2] =  target_alt
+			#self.dji_position_sp.axes[0] = self.step_size_x
+			#self.dji_position_sp.axes[1] = self.step_size_y
+			#self.dji_position_sp.axes[2] =  target_alt
 
-
+                        self.last_time = self.current_time
 
                 else:
                         self.dji_position_sp.axes[0] = 0
@@ -199,12 +198,12 @@ def main():
 
 	# Publisher: PositionTarget
 	setp_pub = rospy.Publisher("dji_sdk/flight_control_setpoint_ENUposition_yaw", Joy, queue_size=10)        
+        setv_pub = rospy.Publisher("dji_sdk/flight_control_setpoint_ENUvelocity_yawrate", Joy, queue_size=10) 
 
 	rate = rospy.Rate(10.0)
         
         K.enableSDK()
-        K.enableLocalPosition()
-
+        
         #calling TakeOff function
         K.takeOff()
 
@@ -218,9 +217,12 @@ def main():
 		i = i +1
 		rate.sleep()
 
+        K.last_time = rospy.get_time()
+
 	while not rospy.is_shutdown():
-               
-		setp_pub.publish(K.dji_position_sp)
+
+                setv_pub.publish(K.dji_velocity_sp)
+		#setp_pub.publish(K.dji_position_sp)
 		rate.sleep()
 
 if __name__ == '__main__':
