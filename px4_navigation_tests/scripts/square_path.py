@@ -39,45 +39,100 @@ def make_square_path(set_point,sp_pub,rate):
 	set_point.x = 0
 	set_point.y = 0
 	set_point.z = 3
+        side = 5
+        step_size=0.02
+        steps=side/step_size
+	while not rospy.is_shutdown():
+	     sp_pub.publish(set_point)
+	     if i >= 1 and i <= steps:
+		set_point.x=set_point.x+step_size
+		set_point.y=set_point.y
+		print "x++"
+
+	     if i >= (steps+1) and i <= (2*steps):
+		set_point.x= side
+		set_point.y= 0
+		
+
+	     if i >= (2*steps+1) and i <= (3*steps):
+		set_point.x=set_point.x
+		set_point.y=set_point.y+ step_size
+		print "y++"
+
+	     if i >= (3*steps+1) and i <= (4*steps):
+		set_point.x=side
+		set_point.y=side
+	      
+	     if i >= (4*steps+1) and i <= (5*steps):
+		set_point.x=set_point.x-step_size
+		set_point.y=set_point.y
+		print "x--"
+
+	     if i >= (5*steps+1) and i <= (6*steps):
+		set_point.x= 0
+		set_point.y= side
+
+	     if i>= (6*steps+1) and i <= (7*steps):
+		set_point.x=set_point.x
+		set_point.y=set_point.y-step_size
+		print "y--"
+	    
+	     if i>= (7*steps+1) and i <= (8*steps):
+		set_point.x= 0
+		set_point.y= 0
+
+	  
+	     if i>= (8*steps+1):
+		 i=1
+	     print i
+	     i=i+1
+	     rate.sleep()
+
+def make_square_path2(set_point,sp_pub,rate):
+        i=0
+	set_point.x = 0
+	set_point.y = 0
+	set_point.z = 3
+        side = 2
 
 	while not rospy.is_shutdown():
 	     sp_pub.publish(set_point)
 	     if i >= 1 and i <= 100:
-		set_point.x=set_point.x+0.02
-		set_point.y=set_point.y
+		set_point.x= side
+		set_point.y= 0
 		print "x++"
 
 	     if i >= 101 and i <= 200:
-		set_point.x=set_point.x
-		set_point.y=set_point.y
+		set_point.x= side
+		set_point.y= 0
 		
 
 	     if i >= 201 and i <= 300:
-		set_point.x=set_point.x
-		set_point.y=set_point.y+0.02
+		set_point.x= side
+		set_point.y= side
 		print "y++"
 
 	     if i >= 301 and i <= 400:
-		set_point.x=set_point.x
-		set_point.y=set_point.y
+		set_point.x=side
+		set_point.y=side
 	      
 	     if i >= 401 and i <= 500:
-		set_point.x=set_point.x-0.02
-		set_point.y=set_point.y
+		set_point.x= 0
+		set_point.y= side
 		print "x--"
 
 	     if i >= 501 and i <= 600:
-		set_point.x=set_point.x
-		set_point.y=set_point.y
+		set_point.x= 0
+		set_point.y= side
 
 	     if i>= 601 and i <= 700:
-		set_point.x=set_point.x
-		set_point.y=set_point.y-0.02
+		set_point.x= 0
+		set_point.y= 0
 		print "y--"
 	    
 	     if i>= 701 and i <= 800:
-		set_point.x=set_point.x
-		set_point.y=set_point.y
+		set_point.x= 0
+		set_point.y= 0
 
 	  
 	     if i>= 801:
@@ -85,9 +140,8 @@ def make_square_path(set_point,sp_pub,rate):
 	     print i
 	     i=i+1
 	     rate.sleep()
-
     
-def make_circular_path(set_point,sp_pub,rate):
+def make_circular_path2(set_point,sp_pub,rate):
 	
 	set_point.x = 0
 	set_point.y = 0
@@ -154,7 +208,7 @@ def main():
         if path == 3:
            make_circular_path(set_point,sp_pub,rate)
 
-		#Just comment
+
 
 if __name__ == '__main__':
 	try:
