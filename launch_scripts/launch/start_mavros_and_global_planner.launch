@@ -27,8 +27,8 @@
         </include>
     </group>
 
-    <include file="$(find launch_scripts)/launch/r200_custom_outdoor.launch" >
-    </include>
+		<include file="$(find realsense_camera)/launch/r200_nodelet_rgbd.launch" >
+		</include>
 
     <include file="$(find global_planner)/launch/global_planner_octomap.launch" >
         <arg name="point_cloud_topic" value="$(arg point_cloud_topic)" />
