@@ -30,6 +30,9 @@
 		<include file="$(find realsense_camera)/launch/r200_nodelet_rgbd.launch" >
 		</include>
 
+    <node name="dynamic_reconfigure_load" pkg="dynamic_reconfigure" type="dynparam" args="load /camera/driver $(find launch_scripts)/config/r200_outdoor.yaml" />
+
+
 
   <node name="local_planner_node" pkg="local_planner" type="local_planner_node" output="screen" >
     <param name="goal_x_param" value="15" />
