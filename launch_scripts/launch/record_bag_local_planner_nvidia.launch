@@ -1,0 +1,8 @@
+<launch>
+
+	<!-- ros_bags folder is assumed to exist in HOME directory -->
+	<arg name="user" default="nvidia" />
+
+  <node name="rosbag_local_planner" pkg="rosbag" type="record" args="-o /home/$(arg user)/ros_bags/local_planner_outdoor.bag /tf /mavros/state /mavros/local_position/pose /mavros/setpoint_position/local /mavros/trajectory/desired /mavros/trajectory/generated /mavros/trajectory/path /mavros/obstacle/send /zed/point_cloud/cloud_registered /current_setpoint /selected_marker /goal_position /waypoint /path_actual /local_pointcloud /height_map /complete_tree /initial_height /take_off_pose /original_waypoint /smoothed_waypoint /adpated_waypoint /tree_path /bounding_box /blocked_marker /extended_marker" output="screen" />
+
+</launch>

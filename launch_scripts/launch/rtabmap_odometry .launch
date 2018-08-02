@@ -1,0 +1,18 @@
+<launch>
+
+    <include file="$(find zed_wrapper)/launch/zed_camera.launch" >
+     <arg name="publish_tf" value="false" />
+		</include>
+
+    <include file="$(find rtabmap_ros)/launch/rtabmap.launch" >
+    <arg name="rtabmap_args" value="--delete_db_on_start" />
+    <arg name="depth_topic" value= "/camera/depth/depth_registered" />
+    <arg name="frame_id" value="zed_camera_center" />
+    <arg name="approx_sync" value="false" />
+		</include>
+
+
+
+  
+</launch>
+
