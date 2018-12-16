@@ -129,16 +129,16 @@ class Controller:
 		self.home_z = 0
 
 		self.waypoint1_x = 0
-		self.waypoint1_y = 0
-		self.waypoint1_z = 5
+		self.waypoint1_y = 5
+		self.waypoint1_z = 1
 
 		self.waypoint2_x = 0
-		self.waypoint2_y = 0
-		self.waypoint2_z = 5 
+		self.waypoint2_y = 5
+		self.waypoint2_z = 1 
 
 		self.waypoint3_x = 0
-		self.waypoint3_y = 0
-		self.waypoint3_z = 5
+		self.waypoint3_y = 5
+		self.waypoint3_z = 1
 		
 		self.x_FenceLimit_max = 30 # 300 meters downfield from the starting position
 		self.x_FenceLimit_min = -5 # 5 meters behind the starting the position 
@@ -168,7 +168,7 @@ class Controller:
 		self.worker1_search_WP3_FLAG = 0
 		self.worker1_search_WP4_FLAG = 0
 
-		self.takeoff_height = 5
+		self.takeoff_height = 1
 
 		# Instantiate setpoint topic structures
 		self.positionSp	= PoseStamped()
@@ -292,22 +292,22 @@ class Controller:
 		#UNCOMMENT THIS CODE FOR GPS USE
 		#####################################################################################################################################
 		
-		self.x_FenceLimit_max, self.y_FenceLimit_max, _ = pm.geodetic2enu(self.lat_max, self.lon_max, self.z_limit, self.current_lat, self.current_lon, self.current_alt)
-		self.x_FenceLimit_min, self.y_FenceLimit_min, _ = pm.geodetic2enu(self.lat_min, self.lon_min, self.z_limit, self.current_lat, self.current_lon, self.current_alt)
-		rospy.loginfo('Successfully set fence limit maxes and mins')
+		# self.x_FenceLimit_max, self.y_FenceLimit_max, _ = pm.geodetic2enu(self.lat_max, self.lon_max, self.z_limit, self.current_lat, self.current_lon, self.current_alt)
+		# self.x_FenceLimit_min, self.y_FenceLimit_min, _ = pm.geodetic2enu(self.lat_min, self.lon_min, self.z_limit, self.current_lat, self.current_lon, self.current_alt)
+		# rospy.loginfo('Successfully set fence limit maxes and mins')
 
-		self.waypoint1_x, self.waypoint1_y, _ = pm.geodetic2enu(self.waypoint1_lat, self.waypoint1_lon, self.waypoint1_alt, self.current_lat, self.current_lon, self.current_alt)
-		self.waypoint2_x, self.waypoint2_y, _ = pm.geodetic2enu(self.waypoint2_lat, self.waypoint2_lon, self.waypoint2_alt, self.current_lat, self.current_lon, self.current_alt)
-		self.waypoint3_x, self.waypoint3_y, _ = pm.geodetic2enu(self.waypoint3_lat, self.waypoint3_lon, self.waypoint3_alt, self.current_lat, self.current_lon, self.current_alt)
-		rospy.loginfo('Successfully set waypoints to x,y,z')
+		# self.waypoint1_x, self.waypoint1_y, _ = pm.geodetic2enu(self.waypoint1_lat, self.waypoint1_lon, self.waypoint1_alt, self.current_lat, self.current_lon, self.current_alt)
+		# self.waypoint2_x, self.waypoint2_y, _ = pm.geodetic2enu(self.waypoint2_lat, self.waypoint2_lon, self.waypoint2_alt, self.current_lat, self.current_lon, self.current_alt)
+		# self.waypoint3_x, self.waypoint3_y, _ = pm.geodetic2enu(self.waypoint3_lat, self.waypoint3_lon, self.waypoint3_alt, self.current_lat, self.current_lon, self.current_alt)
+		# rospy.loginfo('Successfully set waypoints to x,y,z')
 
-		self.x_fence_max_warn = self.x_FenceLimit_max - 1
-		self.x_fence_min_warn = self.x_FenceLimit_min + 1
-		self.y_fence_max_warn = self.y_FenceLimit_max - 1
-		self.y_fence_min_warn = self.y_FenceLimit_min + 1
-		self.z_limit_warn = self.z_limit - .5
+		# self.x_fence_max_warn = self.x_FenceLimit_max - 1
+		# self.x_fence_min_warn = self.x_FenceLimit_min + 1
+		# self.y_fence_max_warn = self.y_FenceLimit_max - 1
+		# self.y_fence_min_warn = self.y_FenceLimit_min + 1
+		# self.z_limit_warn = self.z_limit - .5
 
-		self.building_center_x, self.building_center_y, _ = pm.geodetic2enu(self.building_center_lat, self.building_center_lon, self.z_limit, self.current_lat, self.current_lon, self.current_alt)
+		# self.building_center_x, self.building_center_y, _ = pm.geodetic2enu(self.building_center_lat, self.building_center_lon, self.z_limit, self.current_lat, self.current_lon, self.current_alt)
 
 		#####################################################################################################################################
 
@@ -385,7 +385,7 @@ class Controller:
 
 			if abs(self.current_local_x - self.worker1_search_FAR_x)<= 1 and abs(self.current_local_y - self.worker1_search_LEFT_y) <= 1 and abs(self.current_local_z - self.worker1_search_z) <= 0.5:
 				rospy.loginfo("Current position close enough to desired waypoint")
-				rospy.loginfo("Reached worker search waypoint 2")
+				rospy.loginfo("Reached worker search waypoint 3")
 				self.worker1_search_WP3_FLAG = 1
 
 		elif self.worker1_search_WP4_FLAG == 0:
@@ -397,7 +397,7 @@ class Controller:
 
 			if abs(self.current_local_x - self.worker1_search_NEAR_x)<= 1 and abs(self.current_local_y - self.worker1_search_LEFT_y) <= 1 and abs(self.current_local_z - self.worker1_search_z) <= 0.5:
 				rospy.loginfo("Current position close enough to desired waypoint")
-				rospy.loginfo("Reached worker search waypoint 2")
+				rospy.loginfo("Reached worker search waypoint 4")
 				self.worker1_search_WP4_FLAG = 1
 
 		else:

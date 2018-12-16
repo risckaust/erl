@@ -6,7 +6,7 @@ import tf
 
 from math import *
 from sensor_msgs.msg import NavSatFix
-from geometry_msgs.msg import Point, PoseStamped, PoseWithCovarianceStamped
+from geometry_msgs.msg import Point, PoseStamped, Quaternion, PoseWithCovarianceStamped
 from mavros_msgs.msg import *
 from mavros_msgs.srv import *
 from std_msgs.msg import *
@@ -123,14 +123,13 @@ class Controller:
 		self.y_fence_min_warn = -29 # 14 meters to the right of the starting position
 		self.z_limit_warn = 35 # Maximum height above ground that drone is allowed to go (MAX height is 40 meters - TO BE VERIFIED BY COMPETITION ORGANIZERS)
 
-		self.building_center_x = 0#10
-		self.building_center_y = 7
+		self.building_center_x = -5#10
+		self.building_center_y = 0
 
 		self.takeoff_height_building = 1
 
 		# Instantiate setpoint topic structures
 		self.positionSp	= PoseStamped()
-		
 
 		#defining the modes
 		self.modes = fcuModes()
@@ -181,18 +180,23 @@ class Controller:
 		self.euler_back_z = pi
 		self.euler_left_z = -pi/2
 
-		self.entrance_search_WP1_FLAG = 0
-		self.entrance_search_WP2_FLAG = 0
-		self.entrance_search_WP3_FLAG = 0
-		self.etnrance_search_WP4_FLAG = 0
+		self.target_euler_x = 0
+		self.target_euler_y = 0
+		self.target_euler_z = 0
+
+		self.entrance_search_WPS_FLAG = [0, 0, 0, 0, 0, 0, 0, 0]
 
 		self.entrance_found_flag = 0
 
 		self.greentagSp = PoseStamped()
 		self.worker2Sp = PoseStamped()
-		self.rotation = PoseWithCovarianceStamped()
+		self.rotation = PoseStamped()
 
 		self.worker2_found_flag = 0
+
+		# This publisher is used because the PX4 avoidance package does not accept yaw inputs to the move_base_simple/goal topic
+		# Setpoint publisher
+		self.yaw_pub = rospy.Publisher('mavros/setpoint_position/local', PoseStamped, queue_size=1)
 		##########################################################################################################################################
 		
 	
@@ -328,14 +332,16 @@ class Controller:
 		# extend out 10 meters on all sides. We want our drone to do the scan from 3 meters
 		# away from the buliding. THE FOLLOWING CODE ASSUMES BUIDLING CENTER Y = 0 (IS CENTERED ALONG WIDTH OF FIELD) !!!!!!
 
-		self.entrance_search_FRONT_x = self.building_center_x - 3#13 # 3 meters in front of buliding looking towards it
-		self.entrance_search_RIGHT_y = self.building_center_y - 3#13 # 3 meters to the right of the building
-		self.entrance_search_BACK_x = self.building_center_x + 3#13 # 3 meters in back of the building
-		self.entrance_search_LEFT_y = self.building_center_y + 3#13
+		self.entrance_search_FRONT_x = self.building_center_x - 5#13 # 3 meters in front of buliding looking towards it
+		self.entrance_search_RIGHT_y = self.building_center_y - 5#13 # 3 meters to the right of the building
+		self.entrance_search_BACK_x = self.building_center_x + 5#13 # 3 meters in back of the building
+		self.entrance_search_LEFT_y = self.building_center_y + 5#13
 		self.entrance_search_FRONT_AND_BACK_y = self.building_center_y
 		self.entrance_search_RIGHT_AND_LEFT_x = self.building_center_x
 
-		if self.entrance_search_WP1_FLAG == 0:
+		# THIS SECTION OF CODE IS INCREDIBLY BULKY. CONSIDER REVISING
+
+		if self.entrance_search_WPS_FLAG[0] == 0:
 
 			self.positionSp.header.frame_id = 'local_origin'
 			self.positionSp.pose.position.x = self.entrance_search_FRONT_x
@@ -343,27 +349,41 @@ class Controller:
 			self.positionSp.pose.position.z = self.entrance_search_z
 			self.positionSp.pose.orientation.w = 1
 
-			rospy.loginfo("Searching front side of building for any tags")
+			rospy.loginfo("Heading to front of building for tag search")
 
 			if abs(self.current_local_x - self.entrance_search_FRONT_x)<= 1 and abs(self.current_local_y - self.entrance_search_FRONT_AND_BACK_y) <= 1 and abs(self.current_local_z - self.entrance_search_z) <= 0.5:
 				
 				self.rotation.header.frame_id = 'local_origin'
-				(self.rotation.pose.pose.orientation.x, self.rotation.pose.pose.orientation.y, self.rotation.pose.pose.orientation.z, _) = tf.transformations.quaternion_from_euler(0, 0, self.euler_front_z)
-				self.rotation.pose.pose.position.x = self.positionSp.pose.position.x
-				self.rotation.pose.pose.position.y = self.positionSp.pose.position.y
-				self.rotation.pose.pose.position.z = self.positionSp.pose.position.z
-				self.yaw_pub.publish(K.rotation)
+				(self.rotation.pose.orientation.x, self.rotation.pose.orientation.y, self.rotation.pose.orientation.z, self.rotation.pose.orientation.w) = tf.transformations.quaternion_from_euler(0, 0, self.euler_front_z)
+				self.rotation.pose.position.x = self.positionSp.pose.position.x
+				self.rotation.pose.position.y = self.positionSp.pose.position.y
+				self.rotation.pose.position.z = self.positionSp.pose.position.z
 
-				rospy.loginfo('Current euler rotation')
-				rospy.loginfo(self.current_euler_z)
-				rospy.loginfo('Desired euler rotation')
-				rospy.loginfo(self.euler_front_z)
-
-				if abs(self.current_euler_zr - self.euler_front_z) < .1:
-					rospy.sleep(1)
-					self.entrance_search_WP1_FLAG = 1
+				# This is a brute force method to override the commands being sent by the local planner. This may cause issues...
+				while abs(self.current_euler_zr - self.euler_front_z) > .1:
+					self.yaw_pub.publish(self.rotation)
+					rospy.loginfo('Turning to face building')
+				t = 0
+				while t < 5000:
+					self.yaw_pub.publish(self.rotation)
+					rospy.loginfo('Vehicle oriented to building, waiting for 2 seconds to search for tag')	
+					t = t + 1
 				
-		elif self.entrance_search_WP2_FLAG == 0:
+				self.entrance_search_WPS_FLAG[0] = 1
+			
+		elif self.entrance_search_WPS_FLAG[1] == 0:
+
+			self.positionSp.header.frame_id = 'local_origin'
+			self.positionSp.pose.position.x = self.entrance_search_FRONT_x
+			self.positionSp.pose.position.y = self.entrance_search_RIGHT_y
+			self.positionSp.pose.position.z = self.entrance_search_z
+			self.positionSp.pose.orientation.w = 1
+
+			if abs(self.current_local_x - self.entrance_search_FRONT_x)<= 1 and abs(self.current_local_y - self.entrance_search_RIGHT_y) <= 1 and abs(self.current_local_z - self.entrance_search_z) <= 0.5:
+
+				self.entrance_search_WPS_FLAG[1] = 1
+
+		elif self.entrance_search_WPS_FLAG[2] == 0:
 
 			self.positionSp.header.frame_id = 'local_origin'
 			self.positionSp.pose.position.x = self.entrance_search_RIGHT_AND_LEFT_x
@@ -371,46 +391,83 @@ class Controller:
 			self.positionSp.pose.position.z = self.entrance_search_z
 			self.positionSp.pose.orientation.w = 1
 
-			(self.rotation.pose.pose.orientation.x, self.rotation.pose.pose.orientation.y, self.rotation.pose.pose.orientation.z, _) = tf.transformations.quaternion_from_euler(0, 0, self.euler_right_z)
-
-			rospy.loginfo("Searching right side of building for any tags")
+			rospy.loginfo("Heading to right side of building for tag search")
 
 			if abs(self.current_local_x - self.entrance_search_RIGHT_AND_LEFT_x)<= 1 and abs(self.current_local_y - self.entrance_search_RIGHT_y) <= 1 and abs(self.current_local_z - self.entrance_search_z) <= 0.5:
 				
 				self.rotation.header.frame_id = 'local_origin'
-				(self.rotation.pose.pose.orientation.x, self.rotation.pose.pose.orientation.y, self.rotation.pose.pose.orientation.z, _) = tf.transformations.quaternion_from_euler(0, 0, self.euler_right_z)
-				self.rotation.pose.pose.position.x = self.positionSp.pose.position.x
-				self.rotation.pose.pose.position.y = self.positionSp.pose.position.y
-				self.rotation.pose.pose.position.z = self.positionSp.pose.position.z
-				self.yaw_pub.publish(K.rotation)
+				(self.rotation.pose.orientation.x, self.rotation.pose.orientation.y, self.rotation.pose.orientation.z, self.rotation.pose.orientation.w) = tf.transformations.quaternion_from_euler(0, 0, self.euler_right_z)
+				self.rotation.pose.position.x = self.positionSp.pose.position.x
+				self.rotation.pose.position.y = self.positionSp.pose.position.y
+				self.rotation.pose.position.z = self.positionSp.pose.position.z
 
-				rospy.loginfo('Current euler rotation')
-				rospy.loginfo(self.current_euler_z)
-				rospy.loginfo('Desired euler rotation')
-				rospy.loginfo(self.euler_right_z)
+				# This is a brute force method to override the commands being sent by the local planner. This may cause issues...
+				while abs(self.current_euler_zr - self.euler_right_z) > .1:
+					self.yaw_pub.publish(self.rotation)
+					rospy.loginfo('Turning to face building')
+				t = 0
+				while t < 5000:
+					self.yaw_pub.publish(self.rotation)
+					rospy.loginfo('Vehicle oriented to building, waiting for 2 seconds to search for tag')	
+					t = t + 1
 
-				if abs(self.current_euler_zr - self.euler_right_z) < .1:
-					rospy.sleep(1)
-					self.entrance_search_WP2_FLAG = 1
+				self.entrance_search_WPS_FLAG[2] = 1
 
-		elif self.entrance_search_WP3_FLAG == 0:
+		elif self.entrance_search_WPS_FLAG[3] == 0:
+
+			self.positionSp.header.frame_id = 'local_origin'
+			self.positionSp.pose.position.x = self.entrance_search_BACK_x
+			self.positionSp.pose.position.y = self.entrance_search_RIGHT_y
+			self.positionSp.pose.position.z = self.entrance_search_z
+			self.positionSp.pose.orientation.w = 1
+
+			if abs(self.current_local_x - self.entrance_search_BACK_x)<= 1 and abs(self.current_local_y - self.entrance_search_RIGHT_y) <= 1 and abs(self.current_local_z - self.entrance_search_z) <= 0.5:
+
+				self.entrance_search_WPS_FLAG[3] = 1
+
+		elif self.entrance_search_WPS_FLAG[4] == 0:
 
 			self.positionSp.header.frame_id = 'local_origin'
 			self.positionSp.pose.position.x = self.entrance_search_BACK_x
 			self.positionSp.pose.position.y = self.entrance_search_FRONT_AND_BACK_y
 			self.positionSp.pose.position.z = self.entrance_search_z
 			self.positionSp.pose.orientation.w = 1
-			
-			self.rotation.header.frame_id = 'local_origin'
-			(self.rotation.pose.pose.orientation.x, self.rotation.pose.pose.orientation.y, self.rotation.pose.pose.orientation.z, _) = tf.transformations.quaternion_from_euler(0, 0, self.euler_back_z)
 
-			rospy.loginfo("Searching back side of building for any tags")
+			rospy.loginfo("Heading to back side of building for tag search")
 
-			if abs(self.current_local_x - self.entrance_search_BACK_x)<= 1 and abs(self.current_local_y - self.entrance_search_FRONT_AND_BACK_y) <= 1 and abs(self.current_local_z - self.entrance_search_z) <= 0.5 and abs(self.current_euler_zr - self.euler_back_z) < .1:
-				rospy.sleep(1)
-				self.entrance_search_WP3_FLAG = 1
+			if abs(self.current_local_x - self.entrance_search_BACK_x)<= 1 and abs(self.current_local_y - self.entrance_search_FRONT_AND_BACK_y) <= 1 and abs(self.current_local_z - self.entrance_search_z) <= 0.5:
+				
+				self.rotation.header.frame_id = 'local_origin'
+				(self.rotation.pose.orientation.x, self.rotation.pose.orientation.y, self.rotation.pose.orientation.z, self.rotation.pose.orientation.w) = tf.transformations.quaternion_from_euler(0, 0, self.euler_back_z)
+				self.rotation.pose.position.x = self.positionSp.pose.position.x
+				self.rotation.pose.position.y = self.positionSp.pose.position.y
+				self.rotation.pose.position.z = self.positionSp.pose.position.z
 
-		elif self.entrance_search_WP4_FLAG == 0:
+				# This is a brute force method to override the commands being sent by the local planner. This may cause issues...
+				while abs(self.current_euler_zr - self.euler_back_z) > .1:
+					self.yaw_pub.publish(self.rotation)
+					rospy.loginfo('Turning to face building')
+				t = 0
+				while t < 5000:
+					self.yaw_pub.publish(self.rotation)
+					rospy.loginfo('Vehicle oriented to building, waiting for 2 seconds to search for tag')	
+					t = t + 1
+
+				self.entrance_search_WPS_FLAG[4] = 1
+
+		elif self.entrance_search_WPS_FLAG[5] == 0:
+
+			self.positionSp.header.frame_id = 'local_origin'
+			self.positionSp.pose.position.x = self.entrance_search_BACK_x
+			self.positionSp.pose.position.y = self.entrance_search_LEFT_y
+			self.positionSp.pose.position.z = self.entrance_search_z
+			self.positionSp.pose.orientation.w = 1
+
+			if abs(self.current_local_x - self.entrance_search_BACK_x)<= 1 and abs(self.current_local_y - self.entrance_search_LEFT_y) <= 1 and abs(self.current_local_z - self.entrance_search_z) <= 0.5:
+
+				self.entrance_search_WPS_FLAG[5] = 1
+
+		elif self.entrance_search_WPS_FLAG[6] == 0:
 
 			self.positionSp.header.frame_id = 'local_origin'
 			self.positionSp.pose.position.x = self.entrance_search_RIGHT_AND_LEFT_x
@@ -418,21 +475,44 @@ class Controller:
 			self.positionSp.pose.position.z = self.entrance_search_z
 			self.positionSp.pose.orientation.w = 1
 			
-			self.rotation.header.frame_id = 'local_origin'
-			(self.rotation.pose.pose.orientation.x, self.rotation.pose.pose.orientation.y, self.rotation.pose.pose.orientation.z, _) = tf.transformations.quaternion_from_euler(0, 0, self.euler_left_z)
+			rospy.loginfo("Heading to left side of building for tag search")
 
-			rospy.loginfo("Searching left side of building for any tags")
+			if abs(self.current_local_x - self.entrance_search_RIGHT_AND_LEFT_x)<= 1 and abs(self.current_local_y - self.entrance_search_LEFT_y) <= 1 and abs(self.current_local_z - self.entrance_search_z) <= 0.5:
+				
+				self.rotation.header.frame_id = 'local_origin'
+				(self.rotation.pose.orientation.x, self.rotation.pose.orientation.y, self.rotation.pose.orientation.z, self.rotation.pose.orientation.w) = tf.transformations.quaternion_from_euler(0, 0, self.euler_left_z)
+				self.rotation.pose.position.x = self.positionSp.pose.position.x
+				self.rotation.pose.position.y = self.positionSp.pose.position.y
+				self.rotation.pose.position.z = self.positionSp.pose.position.z
 
-			if abs(self.current_local_x - self.entrance_search_RIGHT_AND_LEFT_x)<= 1 and abs(self.current_local_y - self.entrance_search_LEFT_y) <= 1 and abs(self.current_local_z - self.entrance_search_z) <= 0.5 and abs(self.current_euler_zr - self.euler_left_z) < .1:
-				rospy.sleep(1)
-				self.entrance_search_WP4_FLAG = 1
+				# This is a brute force method to override the commands being sent by the local planner. This may cause issues...
+				while abs(self.current_euler_zr - self.euler_left_z) > .1:
+					self.yaw_pub.publish(self.rotation)
+					rospy.loginfo('Turning to face building')
+				t = 0
+				while t < 5000:
+					self.yaw_pub.publish(self.rotation)
+					rospy.loginfo('Vehicle oriented to building, waiting for 2 seconds to search for tag')	
+					t = t + 1
+					rospy.loginfo(t)
 
+				self.entrance_search_WPS_FLAG[6] = 1
+
+		elif self.entrance_search_WPS_FLAG[7] == 0:
+
+			self.positionSp.header.frame_id = 'local_origin'
+			self.positionSp.pose.position.x = self.entrance_search_FRONT_x
+			self.positionSp.pose.position.y = self.entrance_search_LEFT_y
+			self.positionSp.pose.position.z = self.entrance_search_z
+			self.positionSp.pose.orientation.w = 1
+
+			if abs(self.current_local_x - self.entrance_search_FRONT_x)<= 1 and abs(self.current_local_y - self.entrance_search_LEFT_y) <= 1 and abs(self.current_local_z - self.entrance_search_z) <= 0.5:
+
+				self.entrance_search_WPS_FLAG[7] = 1
+		
 		else:
 			rospy.logwarn(':[ COULD NOT FIND ANY TAGS')
-			self.entrance_search_WP1_FLAG = 0
-			self.entrance_search_WP2_FLAG = 0
-			self.entrance_search_WP3_FLAG = 0
-			self.entrance_search_WP4_FLAG = 0
+			self.entrance_search_WPS_FLAG = [0, 0, 0, 0, 0, 0, 0, 0]
 
 	def isTooCloseToFence(self):
 
@@ -503,6 +583,12 @@ def main():
 	rospy.Subscriber("/detected_object_3d_pos", PoseStamped, K.objectPoseCb)
 
 	########## Publishers ##########
+	# # This publisher is used because the PX4 avoidance package does not accept yaw inputs to the move_base_simple/goal topic
+	# # Setpoint publisher
+	# yaw_pub = rospy.Publisher('mavros/setpoint_position/local', PoseStamped, queue_size=1)
+
+	# yaw_pub = rospy.Publisher('/initialpose',PoseWithCovarianceStamped, queue_size=1)
+	rate = rospy.Rate(10.0)
 
 	# Publisher: PositionTarget
 	avoid_pub = rospy.Publisher("move_base_simple/goal", PoseStamped, queue_size=10)
@@ -510,13 +596,10 @@ def main():
 
 	servo_pub = rospy.Publisher("/servo", UInt16, queue_size=10)
 
-	# This publisher is used because the PX4 avoidance package does not accept yaw inputs to the move_base_simple/goal topic
-	yaw_pub = rospy.Publisher('/initialpose',PoseWithCovarianceStamped, queue_size=10)
-
 	# Do initial checks
 	while (K.current_lat*K.current_lon*K.current_alt) == 0:
 
-		rospy.loginfo('Waiting for current gps location to execute setWaypoints_and_FenceCb') # Initializes waypoints and fence in local x,y,z and checks to see if they make sense
+		rospy.loginfo('Waiting for current gps location to execute setWaypoints_and_Fence') # Initializes waypoints and fence in local x,y,z and checks to see if they make sense
 		rate.sleep()
 
 	K.setWayoints_and_Fence()
@@ -537,20 +620,20 @@ def main():
 	K.TAKEOFF = 1
 	
 	#########################################################
-
+	
 	while not rospy.is_shutdown():
 
 		#GRADUAL CLOSURE OF GRIPPER
 		if(K.gripper_flag):
 			rospy.loginfo('Gripper closing')
 			servo_pub.publish(K.RELEASE)
-			rospy.sleep(2)
+			rospy.sleep(0.2)
 			for K.n.data in range(K.RELEASE.data,K.HOLD.data):
 				if(rospy.is_shutdown()):
 					continue
 				servo_pub.publish(K.n)
 				rospy.sleep(0.1)
-			rospy.sleep(1)
+			rospy.sleep(0.1)
 		K.gripper_flag = False
 
 		############ Check if vehicle is currently in warning area first #############
@@ -594,6 +677,11 @@ def main():
 			else:
 				# Execute Entrance Search Waypoints. If can't find anything, do it over again
 				K.EntranceSearchPattern()
+				# (K.target_euler_x, K.target_euler_y, K.target_euler_z) = tf.transformations.euler_from_quaternion([K.rotation.pose.pose.orientation.x, K.rotation.pose.pose.orientation.y, K.rotation.pose.pose.orientation.z, K.rotation.pose.pose.orientation.w])
+				# rospy.loginfo('Desired Yaw Euler')
+				# rospy.loginfo(K.target_euler_z)
+				# rospy.loginfo('Current Yaw Euler')
+				# rospy.loginfo(K.current_euler_zr)
 
 		if K.ENTERBUILDING:
 			rospy.loginfo('Drone entering building')
