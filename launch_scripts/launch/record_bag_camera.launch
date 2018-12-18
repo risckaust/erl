@@ -1,8 +1,0 @@
-<launch>
-
-	<!-- ros_bags folder is assumed to exist in HOME directory -->
-	<arg name="user" default="drone" />
-
-  <node name="rosbag_camera_topics" pkg="rosbag" type="record" args="-o /home/$(arg user)/ros_bags/camera_topics_outdoor.bag /mavros/state /camera/rgb/camera_info /camera/depth/camera_info /camera/depth/points /camera/depth/image_rect /camera/depth/image_raw /camera/rgb/image_rect_color /tf /tf_static /mavros/local_position/pose /camera/rgb/image_raw" output="screen" />
-
-</launch>

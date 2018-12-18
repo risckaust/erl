@@ -1,8 +1,0 @@
-<launch>
-
-	<!-- ros_bags folder is assumed to exist in HOME directory -->
-	<arg name="user" default="nvidia" />
-
-  <node name="rosbag_local_planner" pkg="rosbag" type="record" args="-o /home/$(arg user)/ros_bags/SLAM.bag  /camera/rtabmap/cloud_ground /camera/rtabmap/cloud_map /camera/rtabmap/cloud_obstacles /camera/rtabmap/odom" output="screen" />
-
-</launch>

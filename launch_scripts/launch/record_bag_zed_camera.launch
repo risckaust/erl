@@ -1,9 +1,0 @@
-<launch>
-
-	<!-- ros_bags folder is assumed to exist in HOME directory -->
-	<arg name="user" default="nvidia" />
-
-       <node name="rosbag_zed_camera_topics" pkg="rosbag" type="record" args="-o /home/$(arg user)/ros_bags/camera_topics_outdoor.bag /mavros/state /zed/rgb/camera_info /zed/depth/camera_info /zed/     point_cloud/cloud_registered /zed/rgb/image_rect_color/compressedDepth /zed/depth/depth_registered /zed/rgb/image_rect_color /tf /tf_static /mavros/local_position/pose /zed/rgb/image_raw_color /zed/odom
-" output="screen" />
-
-</launch>
