@@ -323,17 +323,18 @@ class Controller:
 		self.isValidWaypoint(self.waypoint3_x,self.waypoint3_y,self.waypoint3_z) # Test whether waypoint 3 is within fence
 
 	def verifyPOI(self):
-		resume_x = self.positionSp.pose.position.x
-		resume_y = self.positionSp.pose.position.y
-
-		self.positionSp.header.frame_id = 'local_origin'
-		self.positionSp.pose.position.x = self.current_local_x
-		self.positionSp.pose.position.y = self.current_local_y
-		self.avoid_pub.publish(self.positionSp)
 		
 		worker_still_seen = 0
 
 		if self.verifyPOI_flag:
+			resume_x = self.positionSp.pose.position.x
+			resume_y = self.positionSp.pose.position.y
+
+			self.positionSp.header.frame_id = 'local_origin'
+			self.positionSp.pose.position.x = self.current_local_x
+			self.positionSp.pose.position.y = self.current_local_y
+			self.avoid_pub.publish(self.positionSp)
+
 			counter = 0
 			for i in range(500):
 				previous_counter = self.counterCb # self.counterCb is constantly getting updated every time objectPoseCb is called
@@ -642,7 +643,7 @@ def main():
 
 				if K.deliver_attempt_num == 1:
 
-					if (abs(K.current_local_x-K.positionSp.pose.position.x)<.2 and abs(K.current_local_y-K.positionSp.pose.position.y)<.2 and abs(K.current_local_z-K.positionSp.pose.position.z)<.3):
+					if (abs(K.current_local_x-K.positionSp.pose.position.x)<.1 and abs(K.current_local_y-K.positionSp.pose.position.y)<.1 and abs(K.current_local_z-K.positionSp.pose.position.z)<.3):
 						K.worker1_still_seen_flag = K.verifyPOI()
 						if K.worker1_still_seen_flag:
 							K.resetStates()
@@ -650,7 +651,8 @@ def main():
 						else:
 							K.deliver_attempt_num = 2
 
-				if K.deliver_attempt_num == 2:	
+				if K.deliver_attempt_num == 2:
+					rospy.loginfo('Could not find outside worker at setpoint. Going to higher altitude to try to find it again.')
 					K.positionSp.pose.position.z = K.worker1_search_z
 
 					if (abs(K.current_local_z-K.position.pose.position.z)) < .5:
