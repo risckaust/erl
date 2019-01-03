@@ -4,13 +4,13 @@ import rospy # ROS interface
 import pymap3d as pm # coordinate conversion
 import tf
 
+from tf.transformations import quaternion_from_euler
 from math import *
 from sensor_msgs.msg import NavSatFix
-from geometry_msgs.msg import Point, PoseStamped
+from geometry_msgs.msg import Point, PoseStamped, Quaternion
 from mavros_msgs.msg import *
 from mavros_msgs.srv import *
 from std_msgs.msg import *
-
 
 class fcuModes:
     def __init__(self):
@@ -79,7 +79,15 @@ class fcuModes:
             flightModeService(custom_mode='AUTO.RTL')
         except rospy.ServiceException, e:
             print "service set_mode call failed: %s. ReturnToHome Mode could not be set."%e
-
+    def setVelocity(self,velocity):
+    	rospy.wait_for_service('param/set')
+    	try:
+    		velocitySetService = rospy.ServiceProxy('param/set', mavros_msgs.srv.ParamSet)
+    		velocitySetService(velocity)
+    		rospy.logwarn('Just tried to set velocity parameter')
+    	except rospy.ServiceException, e:
+    	 	rospy.logwarn('FAILED to set velocity parameter')
+    	 	print "service ParamSet call failed: %s. Velocity could not be set."%e
 class Controller:
 
 	def __init__(self):
@@ -123,6 +131,10 @@ class Controller:
 		self.current_local_y = 0.0
 		self.current_local_z = 0.0
 
+		# Current angles
+		self.current_yaw = 0
+
+
 		#Waypoints ENU Coordinates
 		self.home_x = 0
 		self.home_y = 0
@@ -155,21 +167,18 @@ class Controller:
 		self.building_center_y = 0
 
 		# SEARCH WAYPOINTS ARE TO BE SET BASED ON LOCATION OF BUILDING. WORKER IS PRESUMED TO BE FURTHER DOWNFIELD THAN BUILDING
-		self.worker1_search_LEFT_y = self.y_FenceLimit_max - 7.5 # 7.5 meters from the left edge of the field
-		self.worker1_search_RIGHT_y = self.y_FenceLimit_min + 7.5 # 7.5 meters from the right edge of the field
-		self.worker1_search_NEAR_x = self.building_center_x # DRONE WILL START AT SAME DISTANCE DOWNFIELD AS CENTER OF BUILDING
-		self.worker1_search_FAR_x = self.x_FenceLimit_max - 7.5 # STOP 7.5 METERS SHORT OF EDGE OF FIELD
+		self.worker1_search_FAR_x = 0 
+		self.worker1_search_NEAR_x = 0 
+		self.worker1_search_LEFT_y = 0
+		self.worker1_search_RIGHT_y = 0
 		self.worker1_search_z = 8
 
 		self.worker1_found_flag = 0
-		self.worker1_still_seen_flag = 0
-		self.deliver_attempt_num = 0
 
 		self.worker1_search_WP1_FLAG = 0
 		self.worker1_search_WP2_FLAG = 0
 		self.worker1_search_WP3_FLAG = 0
 		self.worker1_search_WP4_FLAG = 0
-		self.worker1_search_completed_square = 0
 
 		self.takeoff_height = 1.5
 
@@ -179,6 +188,7 @@ class Controller:
 		# Instantiate setpoint topic structures
 		self.positionSp	= PoseStamped()
 		self.worker1Sp = PoseStamped()
+		# self.maxvelocity = ParamSet()
 
 		#defining the modes
 		self.modes = fcuModes()
@@ -207,9 +217,6 @@ class Controller:
 		self.HOLD.data = 131
 		self.RELEASE.data = 80
 		self.gripper_flag = True
-
-		# Publisher: PositionTarget
-		self.avoid_pub = rospy.Publisher("move_base_simple/goal", PoseStamped, queue_size=10)
 
 	def resetStates(self):
 		self.TAKEOFF = 0
@@ -240,6 +247,9 @@ class Controller:
 			self.current_local_x = msg.pose.position.x
 			self.current_local_y = msg.pose.position.y
 			self.current_local_z = msg.pose.position.z
+
+			(_, _, self.current_yaw) = tf.transformations.euler_from_quaternion([msg.pose.orientation.x, msg.pose.orientation.y, msg.pose.orientation.z, msg.pose.orientation.w])
+
 
 	def objectPoseCb(self, msg):
 		if msg is not None and self.WORKER1SEARCH:
@@ -323,40 +333,23 @@ class Controller:
 		self.isValidWaypoint(self.waypoint3_x,self.waypoint3_y,self.waypoint3_z) # Test whether waypoint 3 is within fence
 
 	def verifyPOI(self):
-		
-		worker_still_seen = 0
-
 		if self.verifyPOI_flag:
-			resume_x = self.positionSp.pose.position.x
-			resume_y = self.positionSp.pose.position.y
-
-			self.positionSp.header.frame_id = 'local_origin'
-			self.positionSp.pose.position.x = self.current_local_x
-			self.positionSp.pose.position.y = self.current_local_y
-			self.avoid_pub.publish(self.positionSp)
-
 			counter = 0
-			for i in range(500):
+			for i in range(100):
 				previous_counter = self.counterCb # self.counterCb is constantly getting updated every time objectPoseCb is called
-				rospy.sleep(.01) # Give self.counterCb chance to update if objectPoseCb is called again
+				rospy.sleep(.05) # Give self.counterCb chance to update if objectPoseCb is called again
 				if self.counterCb is not previous_counter:
 					counter = counter + 1
-			if counter >= 27:
+			if counter >= 5:
 				self.worker1_found_flag = 1
-				worker_still_seen = 1
 				rospy.loginfo("Outside worker found!")
-			elif counter < 27:
+			elif counter < 5:
 				rospy.loginfo("Detected false positive. Continuing search.")
-				self.positionSp.header.frame_id = 'local_origin'
-				self.positionSp.pose.position.x = resume_x
-				self.positionSp.pose.position.y = resume_y
-				self.avoid_pub.publish(self.positionSp)
 		
 		self.verifyPOI_flag = 0
 		self.counterCb = 0
 
-		return worker_still_seen
-	def Worker1SearchPattern(self,worker1_search_LEFT_y,worker1_search_RIGHT_y,worker1_search_NEAR_x,worker1_search_FAR_x,worker1_search_z):
+	def Worker1SearchPattern(self):
 
 		# Assuming center of building is in center of width of field, search algorithm is to 
 		# go down field on right side, turn left, and come back on left side to cover 
@@ -368,65 +361,82 @@ class Controller:
 		# Drone should go to altitude that is definitely above buliding after completing waypoint 3
 		#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+		self.worker1_search_LEFT_y = self.y_FenceLimit_max - 7.5 # 7.5 meters from the left edge of the field
+		self.worker1_search_RIGHT_y = self.y_FenceLimit_min + 7.5 # 7.5 meters from the right edge of the field
+
+		self.worker1_search_NEAR_x = self.building_center_x # DRONE WILL START AT SAME DISTANCE DOWNFIELD AS CENTER OF BUILDING
+		self.worker1_search_FAR_x = self.x_FenceLimit_max - 7.5 # STOP 7.5 METERS SHORT OF EDGE OF FIELD
+
 		if self.worker1_search_WP1_FLAG == 0:
 
-			self.worker1_search_completed_square = 0
-
 			self.positionSp.header.frame_id = 'local_origin'
-			self.positionSp.pose.position.x = worker1_search_NEAR_x
-			self.positionSp.pose.position.y = worker1_search_RIGHT_y
-			self.positionSp.pose.position.z = worker1_search_z
+			desired_yaw = atan2((self.worker1_search_RIGHT_y-self.current_local_y),(self.worker1_search_NEAR_x-self.current_local_x))
+			quaternion_yaw = quaternion_from_euler(0, 0, desired_yaw)
+			self.positionSp.pose.orientation = Quaternion(*quaternion_yaw)
 
-			if abs(self.current_local_x - worker1_search_NEAR_x)<= 1 and abs(self.current_local_y - worker1_search_RIGHT_y) <= 1 and abs(self.current_local_z - worker1_search_z) <= 0.5:
-				rospy.loginfo("Current position close enough to desired waypoint")
-				rospy.loginfo("Reached worker search waypoint 1")
-				self.worker1_search_WP1_FLAG = 1
+			if abs(self.current_yaw-desired_yaw)<.1:
+
+				self.positionSp.pose.position.x = self.worker1_search_NEAR_x
+				self.positionSp.pose.position.y = self.worker1_search_RIGHT_y
+				self.positionSp.pose.position.z = self.worker1_search_z
+
+				if abs(self.current_local_x - self.worker1_search_NEAR_x)<= 1 and abs(self.current_local_y - self.worker1_search_RIGHT_y) <= 1 and abs(self.current_local_z - self.worker1_search_z) <= 0.5:
+					rospy.loginfo("Current position close enough to desired waypoint")
+					rospy.loginfo("Reached worker search waypoint 1")
+					self.worker1_search_WP1_FLAG = 1
 				
 		elif self.worker1_search_WP2_FLAG == 0:
 
-			self.worker1_search_completed_square = 0
-
 			self.positionSp.header.frame_id = 'local_origin'
-			self.positionSp.pose.position.x = worker1_search_FAR_x
-			self.positionSp.pose.position.y = worker1_search_RIGHT_y
-			self.positionSp.pose.position.z = worker1_search_z
+			desired_yaw = 0
+			quaternion_yaw = quaternion_from_euler(0, 0, desired_yaw)
+			self.positionSp.pose.orientation = Quaternion(*quaternion_yaw)
 
-			if abs(self.current_local_x - worker1_search_FAR_x)<= 1 and abs(self.current_local_y - worker1_search_RIGHT_y) <= 1 and abs(self.current_local_z - worker1_search_z) <= 0.5:
-				rospy.loginfo("Current position close enough to desired waypoint")
-				rospy.loginfo("Reached worker search waypoint 2")
-				self.worker1_search_WP2_FLAG = 1
+			if abs(self.current_yaw-desired_yaw)<.1:
+
+				self.positionSp.pose.position.x = self.worker1_search_FAR_x
+				self.positionSp.pose.position.y = self.worker1_search_RIGHT_y
+				self.positionSp.pose.position.z = self.worker1_search_z
+
+				if abs(self.current_local_x - self.worker1_search_FAR_x)<= 1 and abs(self.current_local_y - self.worker1_search_RIGHT_y) <= 1 and abs(self.current_local_z - self.worker1_search_z) <= 0.5:
+					rospy.loginfo("Current position close enough to desired waypoint")
+					rospy.loginfo("Reached worker search waypoint 2")
+					self.worker1_search_WP2_FLAG = 1
 
 		elif self.worker1_search_WP3_FLAG == 0:
 
-			self.worker1_search_completed_square = 0
-
 			self.positionSp.header.frame_id = 'local_origin'
-			self.positionSp.pose.position.x = worker1_search_FAR_x
-			self.positionSp.pose.position.y = worker1_search_LEFT_y
-			self.positionSp.pose.position.z = worker1_search_z
+			desired_yaw = pi/2
+			quaternion_yaw = quaternion_from_euler(0, 0, desired_yaw)
+			self.positionSp.pose.orientation = Quaternion(*quaternion_yaw)
 
-			if abs(self.current_local_x - worker1_search_FAR_x)<= 1 and abs(self.current_local_y - worker1_search_LEFT_y) <= 1 and abs(self.current_local_z - worker1_search_z) <= 0.5:
-				rospy.loginfo("Current position close enough to desired waypoint")
-				rospy.loginfo("Reached worker search waypoint 3")
-				self.worker1_search_WP3_FLAG = 1
+			if abs(self.current_yaw-desired_yaw)<.1:
+				self.positionSp.pose.position.x = self.worker1_search_FAR_x
+				self.positionSp.pose.position.y = self.worker1_search_LEFT_y
+				self.positionSp.pose.position.z = self.worker1_search_z
+				if abs(self.current_local_x - self.worker1_search_FAR_x)<= 1 and abs(self.current_local_y - self.worker1_search_LEFT_y) <= 1 and abs(self.current_local_z - self.worker1_search_z) <= 0.5:
+					rospy.loginfo("Current position close enough to desired waypoint")
+					rospy.loginfo("Reached worker search waypoint 3")
+					self.worker1_search_WP3_FLAG = 1
 
 		elif self.worker1_search_WP4_FLAG == 0:
 
-			self.worker1_search_completed_square = 0
-
 			self.positionSp.header.frame_id = 'local_origin'
-			self.positionSp.pose.position.x = worker1_search_NEAR_x
-			self.positionSp.pose.position.y = worker1_search_LEFT_y			
-			self.positionSp.pose.position.z = worker1_search_z
+			desired_yaw = pi
+			quaternion_yaw = quaternion_from_euler(0, 0, desired_yaw)
+			self.positionSp.pose.orientation = Quaternion(*quaternion_yaw)
 
-			if abs(self.current_local_x - worker1_search_NEAR_x)<= 1 and abs(self.current_local_y - worker1_search_LEFT_y) <= 1 and abs(self.current_local_z - worker1_search_z) <= 0.5:
-				rospy.loginfo("Current position close enough to desired waypoint")
-				rospy.loginfo("Reached worker search waypoint 4")
-				self.worker1_search_WP4_FLAG = 1
+			if abs(self.current_yaw-desired_yaw)<.1:
+				self.positionSp.pose.position.x = self.worker1_search_NEAR_x
+				self.positionSp.pose.position.y = self.worker1_search_LEFT_y			
+				self.positionSp.pose.position.z = self.worker1_search_z
+				if abs(self.current_local_x - self.worker1_search_NEAR_x)<= 1 and abs(self.current_local_y - self.worker1_search_LEFT_y) <= 1 and abs(self.current_local_z - self.worker1_search_z) <= 0.5:
+					rospy.loginfo("Current position close enough to desired waypoint")
+					rospy.loginfo("Reached worker search waypoint 4")
+					self.worker1_search_WP4_FLAG = 1
 
 		else:
 			rospy.logwarn(':[ COULD NOT FIND MISSING WOKRER IN FIELD! TRYING AGAIN')
-			self.worker1_search_completed_square = 1
 			self.worker1_search_WP1_FLAG = 0
 			self.worker1_search_WP2_FLAG = 0
 			self.worker1_search_WP3_FLAG = 0
@@ -502,10 +512,11 @@ def main():
 
 	########## Publishers ##########
 
-	servo_pub = rospy.Publisher("/servo", UInt16, queue_size=10)
+	# Publisher: PositionTarget
+	avoid_pub = rospy.Publisher("mavros/setpoint_position/local", PoseStamped, queue_size=10)
 	rate = rospy.Rate(10.0)
 
-	kill_pub = rospy.Publisher("mavros/rc/override",
+	servo_pub = rospy.Publisher("/servo", UInt16, queue_size=10)
 
 	# Do initial checks
 	while (K.current_lat*K.current_lon*K.current_alt) == 0:
@@ -520,7 +531,7 @@ def main():
 	# We need to send few setpoint messages, then activate OFFBOARD mode, to take effect
 	k=0
 	while k<10:
-		K.avoid_pub.publish(K.positionSp)
+		avoid_pub.publish(K.positionSp)
 		rate.sleep()
 		k = k+1
 
@@ -529,11 +540,6 @@ def main():
 
 	###################### TAKEOFF STUFF ####################
 	K.TAKEOFF = 1
-	K.positionSp.header.frame_id = 'local_origin' # IS THIS NEEDED?
-	K.positionSp.pose.position.x = K.current_local_x 
-	K.positionSp.pose.position.y = K.current_local_y
-	K.positionSp.pose.position.z = K.takeoff_height # Should be 1
-	K.positionSp.pose.orientation.w = 1.0	# IS THIS NEEDED?
 	#########################################################
 
 	while not rospy.is_shutdown():
@@ -548,7 +554,6 @@ def main():
 					continue
 				servo_pub.publish(K.n)
 				rospy.sleep(0.1)
-			rospy.sleep(10)
 		K.gripper_flag = False
 
 		############ Check if vehicle is currently in warning area first #############
@@ -564,7 +569,19 @@ def main():
 
 		if K.TAKEOFF:
 			rospy.logwarn('Vehicle is taking off')
+			K.positionSp.header.frame_id = 'local_origin' # IS THIS NEEDED?
+			K.positionSp.pose.position.x = K.home_x 
+			K.positionSp.pose.position.y = K.home_y
+			K.positionSp.pose.position.z = K.takeoff_height # Should be 1
 
+			rospy.loginfo('Home X Position')
+			rospy.loginfo(K.positionSp.pose.position.x)
+			rospy.loginfo('Home Y Position')
+			rospy.loginfo(K.positionSp.pose.position.y)
+			rospy.loginfo('Takeoff Height')
+			rospy.loginfo(K.positionSp.pose.position.z)
+
+			K.positionSp.pose.orientation.w = 1.0	# IS THIS NEEDED?
 			if abs(K.current_local_z - K.takeoff_height) < .2:
 				rospy.logwarn("Reached Takeoff Height")	
 				K.resetStates()
@@ -577,6 +594,12 @@ def main():
 			K.positionSp.pose.position.x = K.waypoint1_x
 			K.positionSp.pose.position.y = K.waypoint1_y
 			K.positionSp.pose.position.z = K.waypoint1_z
+
+			# K.maxvelocity.param_id = 'MPC_XY_VEL_MAX'
+			# K.maxvelocity.value = 2
+			# rospy.logwarn('Am about to try to set velocity')
+			# K.modes.setVelocity(K.maxvelocity)
+			# rospy.logwarn('Just tried to set velocity parameter')
 
 			tempz1 = K.waypoint1_z
 			rospy.loginfo('Waypoint1_z')
@@ -630,53 +653,31 @@ def main():
 
 		if K.WORKER1SEARCH:
 			rospy.loginfo('Vehicle searching for missing worker outside') 
-			_ = K.verifyPOI() # In this use of verifyPOI, we don't care about the return value from verifyPOI as it is only identifying whether the worker was spotted for the first time to set worker1_found_flag
+			K.verifyPOI()
 			if K.worker1_found_flag:
-				if K.deliver_attempt_num == 0:
-					rospy.loginfo('Outside worker found!')
-					rospy.loginfo('Setting worker position to go to')
+				rospy.loginfo('Outside worker found!')
+				rospy.loginfo('Setting worker position to go to')
 
-					K.positionSp.header.frame_id = 'local_origin'
-					K.positionSp.pose.position.x = K.worker1Sp.pose.position.x
-					K.positionSp.pose.position.y = K.worker1Sp.pose.position.y
-					K.positionSp.pose.position.z = K.worker1_search_z/2
+				K.positionSp.header.frame_id = 'local_origin'
+				K.positionSp.pose.position.x = K.worker1Sp.pose.position.x
+				K.positionSp.pose.position.y = K.worker1Sp.pose.position.y
 
-					K.deliver_attempt_num = 1
-
-				if K.deliver_attempt_num == 1:
-
-					if (abs(K.current_local_x-K.positionSp.pose.position.x)<.1 and abs(K.current_local_y-K.positionSp.pose.position.y)<.1 and abs(K.current_local_z-K.positionSp.pose.position.z)<.3):
-						K.worker1_still_seen_flag = K.verifyPOI()
-						if K.worker1_still_seen_flag:
-							K.resetStates()
-							K.DELIVERAID1 = 1
-						else:
-							K.deliver_attempt_num = 2
-
-				if K.deliver_attempt_num == 2:
-					rospy.loginfo('Could not find outside worker at setpoint. Going to higher altitude to try to find it again.')
-					K.positionSp.pose.position.z = K.worker1_search_z
-
-					if (abs(K.current_local_z-K.positionSp.pose.position.z)) < .5:
-						K.worker1_still_seen_flag = K.verifyPOI()
-						if K.worker1_still_seen_flag:
-							K.deliver_attempt_num = 0
-						else:
-							K.worker1_found_flag = 0
+				K.resetStates()
+				K.DELIVERAID1 = 1
 
 			else:
 				# EXECUTE WORKER SEARCH WAYPOITNS. IF CAN'T FIND ANYTHING, DO IT OVER AGAIN
-				
-				K.Worker1SearchPattern(K.worker1_search_LEFT_y,K.worker1_search_RIGHT_y,K.worker1_search_NEAR_x,K.worker1_search_FAR_x,K.worker1_search_z)
+				K.Worker1SearchPattern()
 
 		if K.DELIVERAID1:
 			rospy.loginfo('Trying to reach outside worker')
-			servo_pub.publish(K.RELEASE)
-			rospy.sleep(1)
-			rospy.loginfo("Aid Dropped")
-			K.resetStates()
-			#K.ENTRANCESEARCH = 1
-			K.GOHOME = 1
+			if (abs(K.current_local_x-K.positionSp.pose.position.x)<.1 and abs(K.current_local_y-K.positionSp.pose.position.y)<.1):
+				servo_pub.publish(K.RELEASE)
+				rospy.sleep(1)
+				rospy.loginfo("Aid Dropped")
+				K.resetStates()
+				#K.ENTRANCESEARCH = 1
+				K.GOHOME = 1
 
 		if K.ENTRANCESEARCH:
 			rospy.loginfo('Drone searching for entrance')
@@ -750,7 +751,7 @@ def main():
 			rospy.logwarn('Vehicle in Hover mode until something else happens')
 			# NEED TO FIGURE OUT HOW TO EXIT THIS STATE
 
-		K.avoid_pub.publish(K.positionSp)
+		avoid_pub.publish(K.positionSp)
 		rate.sleep()	
 
 if __name__ == '__main__':
