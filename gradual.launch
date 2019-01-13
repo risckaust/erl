@@ -1,0 +1,9 @@
+
+<launch>
+   <!-- run gripper.py from gripper package and run serial_node.py from rosserial_python package -->
+   <node pkg="gripper" type="gripper.py" name="gripper"  output="screen">
+   </node>
+   <node pkg="rosserial_python" type="serial_node.py" name="serial_node"  output="screen">
+      <param name="_port" value="/dev/ttyUSB0"/>
+   </node>
+</launch>
