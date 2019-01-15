@@ -12,7 +12,7 @@
  * 120 degrees drops the first kit
  * 80 degrees is drop the second
 */
-#define USE_USBCON
+
 #include <FastLED.h>
 
 #if (ARDUINO >= 100)
@@ -27,11 +27,15 @@
 
 
 
+
 // Number of LED in each arm
 #define NUM_LEDS 1
 
 // Pins where LEDs are connected
 #define DATA_PIN 2 
+
+// Kill Switch Pin
+const int killPin  = 8;
 
 
 CRGB leds[NUM_LEDS];
@@ -47,27 +51,60 @@ void servo_cb( const std_msgs::UInt16& cmd_msg){
 ros::Subscriber<std_msgs::UInt16> sub("servo", servo_cb);
 
 void setup(){
-  // pinMode(13, OUTPUT);
   nh.initNode();
   nh.subscribe(sub);
   servo.attach(13); //attach it to pin 9
-  
+
+  // LED
   FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);
+
+  // Serial for kill switch
+  Serial.begin(57600);
+  pinMode(killPin, OUTPUT);
+  
 }
 
+
+byte byteRead;
+
+
 void loop(){
-  nh.spinOnce();
-  delay(1);
+  Serial.println("MAIN LOOP");
+  while (Serial.available() > 0)
+  {
+    Serial.println("INSIDE WHILE LOOP");
+    byteRead = Serial.read();
+    while (byteRead != 'K')
+    {
+        nh.spinOnce();
+        delay(1);
+
+        // Make LED orange for 0.3 sec
+        leds[0] = CRGB::OrangeRed;
+        FastLED.show();
+        delay(300);
+
+        // Turn LED off for 0.2 sec
+        leds[0] = CRGB::Black;
+        FastLED.show();
+        delay(200);
+        byteRead = Serial.read();
+        Serial.println("READING");
+
+    }
+    if (byteRead == 'K')
+    {
+      Serial.println(byteRead);
+      Serial.println("Drone is turning off");
+      digitalWrite(killPin, HIGH);
+      leds[0] = CRGB::FireBrick;
+      FastLED.show();
+      
+    }
+  }
+  
 
 
-  // Make LED orange for 0.2 sec
-  leds[0] = CRGB::OrangeRed;
-  FastLED.show();
-  delay(300);
 
-  // Turn LED off for 0.2 sec
-  leds[0] = CRGB::Black;
-  FastLED.show();
-  delay(200);
 
 }
