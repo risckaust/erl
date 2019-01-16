@@ -80,6 +80,29 @@ class fcuModes:
             flightModeService(custom_mode='AUTO.RTL')
         except rospy.ServiceException, e:
             print "service set_mode call failed: %s. ReturnToHome Mode could not be set."%e
+class RedTag:
+	def __init__(self):
+		self.x = []
+		self.y = []
+		self.total_num = 0
+class BlueTag:
+	def __init__(self):
+		self.x = []
+		self.y = []
+		self.total_num = 0
+class GreenTag:
+	def __init__(self):
+		self.x = 0
+		self.y = 0
+		self.drone_x = 0
+		self.drone_y = 0
+		self.found = 0
+
+class TEMPORARY_TAG_DETECT:
+	def __init__(self):
+		self.color = 'Red'
+		self.x = 5
+		self.y = 2
 
 class Controller:
 
@@ -133,8 +156,11 @@ class Controller:
 		#defining the modes
 		self.modes = fcuModes()
 
+		self.current_yaw = 0 # Current z rotation (yaw)
+
 		# States
 		self.TAKEOFF = 0
+		self.GOTOBUILDING = 0
 		self.ENTRANCESEARCH = 0
 		self.ENTERBUILDING = 0
 		self.WORKER2SEARCH = 0
@@ -172,12 +198,11 @@ class Controller:
 		self.yaw_building_entr2 = pi/2
 		self.yaw_building_entr3 = -pi/2
 
-		self.current_yaw = 0 # Current z rotation (yaw)
-
-		self.entrance_search_FRONT_x = 0 # positive x is downfield
-		self.entrance_search_BACK_x = 0
-		self.entrance_search_RIGHT_y = 0
-		self.entrance_search_LEFT_y = 0
+		# Positive x is downfield
+		self.entrance_search_FRONT_x = self.building_center_x - 5#13 # 3 meters in front of buliding looking towards it
+		self.entrance_search_RIGHT_y = self.building_center_y - 5#13 # 3 meters to the right of the building
+		self.entrance_search_BACK_x = self.building_center_x + 5#13 # 3 meters in back of the building
+		self.entrance_search_LEFT_y = self.building_center_y + 5#13
 		self.entrance_search_z = 1
 
 		self.yaw_front_z = 0
@@ -189,21 +214,29 @@ class Controller:
 		self.building_scan_WPS_FLAG = [0, 0, 0, 0, 0]
 		self.entrance_search_WPS_FLAG = [0, 0, 0]
 
-		self.unblocked_entrance_found_flag = 0
-		self.red_tag_number = 0
+		self.red_tag = RedTag()
+		self.blue_tag = BlueTag()
+		self.green_tag = GreenTag()
 
 		self.completed_full_rev = 0
 
-		self.greentagSp = PoseStamped()
+		self.tag_info = TEMPORARY_TAG_DETECT() # THIS WILL BE A CUSTOM MESSAGE!!!!!!!!!!!!!
 		self.worker2Sp = PoseStamped()
 
 		self.worker2_found_flag = 0
+
+		self.verifyTAG_flag = 0
+		self.counterTAGCb = 0
 		##########################################################################################################################################
 		
+		############# ENTER BUILDING VARIABLES ########################################
+		self.enter_bldg_flag = [0, 0, 0, 0]
+		self.enter_bldg_orien = 0
 	
 
 	def resetStates(self):
 		self.TAKEOFF = 0
+		self.GOTOBUILDING = 0
 		self.ENTRANCESEARCH = 0
 		self.ENTERBUILDING = 0
 		self.WORKER2SEARCH = 0
@@ -239,8 +272,9 @@ class Controller:
 	################# THIS NEEDS TO BE FILLED OUT MORE - ENTRANCE SEARCH CALL BACK
 	def tagFoundCb(self,msg):
 		if msg is not None and K.ENTRANCESEARCH:
-			rospy.logwarn('Unblcoked Entrance Found!')
-			self.unblocked_entrance_found_flag = 1
+			rospy.loginfo('Tag found')
+			self.tag_info = msg
+			self.verifyTAG_flag = 1
 	##################################################
 
 
@@ -287,6 +321,10 @@ class Controller:
 
 		# self.building_center_x, self.building_center_y, _ = pm.geodetic2enu(self.building_center_lat, self.building_center_lon, self.z_limit, self.current_lat, self.current_lon, self.current_alt)
 
+		# self.building_entr1_x, self.building_entr1_y = pm.geodetic2enu(self.building_entr1_lat, self.building_entr1_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
+		# self.building_entr2_x, self.building_entr2_y = pm.geodetic2enu(self.building_entr2_lat, self.building_entr2_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
+		# self.building_entr3_x, self.building_entr3_y = pm.geodetic2enu(self.building_entr3_lat, self.building_entr3_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
+
 		#####################################################################################################################################
 
 		rospy.logwarn('x Fence Max Warn')
@@ -300,16 +338,70 @@ class Controller:
 		rospy.logwarn('z Height Limit Warn')
 		rospy.logwarn(self.z_limit_warn)
 
+	def verifyTag(self):
+		at_entrance = 0
+		already_detected = 0
+		if self.verifyTAG_flag:
+			if self.tag_info.color == 'Red':
+				for i in range(len(self.red_tag.x)):
+					if abs(self.tag_info.x-self.red_tag.x[i]) < 1 and abs(self.tag_info.y-self.red_tag.y[i]) < 1:
+						rospy.logwarn('Tag was already detected')
+						already_detected = 1
+				if already_detected != 1:
+					self.red_tag.x.append(self.tag_info.x)
+					self.red_tag.y.append(self.tag_info.y)
+					self.red_tag.total_num = self.red_tag.total_num + 1
+					rospy.loginfo("Found a new red tag")
+
+			elif self.tag_info.color == 'Blue':
+				for i in range(len(self.blue_tag.x)):
+					if abs(self.tag_info.x-self.blue_tag.x[i]) < 1 and abs(self.tag_info.y-self.blue_tag.y[i]) < 1:
+						rospy.logwarn('Tag was already detected')
+						already_detected = 1
+				if already_detected != 1:
+					if (abs(self.tag_info.x - self.building_entr1_x) < 1 and abs(self.tag_info.y - self.building_entr1_y) < 1):
+						at_entrance = 1
+					elif (abs(self.tag_info.x - self.building_entr2_x) < 1 and abs(self.tag_info.y - self.building_entr2_y) < 1):
+						at_entrance = 2
+					elif (abs(self.tag_info.x - self.building_entr3_x) < 1 and abs(self.tag_info.y - self.building_entr3_y) < 1):
+						at_entrance = 3
+
+					if at_entrance > 1:
+						self.blue_tag.x.append(self.tag_info.x)
+						self.blue_tag.y.append(self.tag_info.y)
+						self.blue_tag.total_num = self.blue_tag.total_num + 1
+						rospy.loginfo('Found a new blue tag')
+
+					elif at_entrance == 0:
+						rospy.logwarn('Detected Blue Tag but it is not near an entrance so ignoring')
+
+			elif self.tag_info.color == 'Green' and self.green_tag.found == 0:
+				if (abs(self.tag_info.x - self.building_entr1_x) < 1 and abs(self.tag_info.y - self.building_entr1_y) < 1):
+					at_entrance = 1
+				elif (abs(self.tag_info.x - self.building_entr2_x) < 1 and abs(self.tag_info.y - self.building_entr2_y) < 1):
+					at_entrance = 2
+				elif (abs(self.tag_info.x - self.building_entr3_x) < 1 and abs(self.tag_info.y - self.building_entr3_y) < 1):
+					at_entrance = 3
+
+				if at_entrance > 0:
+					self.green_tag.x = self.tag_info.x
+					self.green_tag.y = self.tag_info.y
+					self.green_tag.found = 1
+					self.green_tag.drone_x = self.current_local_x
+					self.green_tag.drone_y = self.current_local_y
+
+					(_, _, self.enter_bldg_orien) = tf.transformations.euler_from_quaternion([self.positionSp.pose.orientation.x, self.positionSp.pose.orientation.y, self.positionSp.pose.orientation.z, self.positionSp.pose.orientation.w])
+
+					rospy.loginfo('Green tag found!')
+		
+		self.verifyTAG_flag = 0
+		self.counterTAGCb = 0
 	
 	def BuildingScan(self):
 
 		# Building is supposed to be 20x20. So from the center of the building, the walls
 		# extend out 10 meters on all sides. We want our drone to do the scan from 3 meters
 		# away from the buliding. THE FOLLOWING CODE ASSUMES BUIDLING CENTER Y = 0 (IS CENTERED ALONG WIDTH OF FIELD) !!!!!!
-
-		############################################################################################################################
-		# IMPORTANT NOTE!!! THIS FUNCTION SHOULD ONLY HAPPEN ONCE THE DRONE HAS GONE BACK TO THE FRONT OF THE TENT AFTER DELIVERAID1
-		############################################################################################################################
 
 		self.entrance_search_FRONT_x = self.building_center_x - 5#13 # 3 meters in front of buliding looking towards it
 		self.entrance_search_RIGHT_y = self.building_center_y - 5#13 # 3 meters to the right of the building
@@ -368,6 +460,14 @@ class Controller:
 
 			rospy.loginfo("Searching back side of building for tags")
 
+			# FOR SIMULATION PURPOSES ONLY!!!!!!!!!!!!!!!!
+			####################################################################
+			# self.verifyTAG_flag = 1
+			# self.tag_info.color = 'Blue'
+			# self.tag_info.x = self.building_center_x - .5
+			# self.tag_info.y = self.building_center_y - 5
+			####################################################################
+
 			if abs(self.current_local_x - self.entrance_search_BACK_x)<= 1 and abs(self.current_local_y - self.entrance_search_LEFT_y) <= 1 and abs(self.current_local_z - self.entrance_search_z) <= 0.5:
 				quaternion_yaw = quaternion_from_euler(0, 0, self.yaw_left_z)
 				self.positionSp.pose.orientation = Quaternion(*quaternion_yaw)
@@ -381,6 +481,14 @@ class Controller:
 			self.positionSp.pose.position.y = self.entrance_search_LEFT_y
 			self.positionSp.pose.position.z = self.entrance_search_z
 
+			# FOR SIMULATION PURPOSES ONLY!!!!!!!!!!!!!!!!
+			####################################################################
+			# self.verifyTAG_flag = 1
+			# self.tag_info.color = 'Red'
+			# self.tag_info.x = self.building_center_x - 3
+			# self.tag_info.y = self.building_center_y - 5
+			####################################################################
+
 			rospy.loginfo("Searching left side of building for tags")
 
 			if abs(self.current_local_x - self.entrance_search_FRONT_x)<= 1 and abs(self.current_local_y - self.entrance_search_LEFT_y) <= 1 and abs(self.current_local_z - self.entrance_search_z) <= 0.5:
@@ -390,13 +498,13 @@ class Controller:
 		else:
 			rospy.loginfo('Completed full revolution')
 			rospy.loginfo('Number of red tags found:')
-			rospy.loginfo(self.red_tag_number)
+			rospy.loginfo(self.red_tag.total_num)
 			self.completed_full_rev = 1
 			self.building_scan_WPS_FLAG = [0, 0, 0, 0, 0]
 
 	def EntranceSearch(self,entrance_x,entrance_y,entrance_view_angle):
 		# This function is only activated if the vehicle could not find the green tag on the first revolution
-
+		entrance_search_counter = 0
 		if (self.entrance_search_WPS_FLAG[0] == 0):
 			self.positionSp.header.frame_id = 'local_origin'
 			self.positionSp.pose.position.z = 8
@@ -410,7 +518,7 @@ class Controller:
 
 		elif (self.entrance_search_WPS_FLAG[1] == 0):
 
-			if abs(self.current_local_x-entrance_x)<.2 and abs(self.current_local_y-entrance_y)<.2:
+			if abs(self.current_local_x-entrance_x)<.5 and abs(self.current_local_y-entrance_y)<.5:
 				self.positionSp.header.frame_id = 'local_origin'
 				self.positionSp.pose.position.z = self.entrance_search_z
 
@@ -422,7 +530,21 @@ class Controller:
 
 			if abs(self.current_local_z-self.entrance_search_z)<.1 and abs(self.current_yaw-entrance_view_angle) < 0.2:
 				rospy.loginfo('Checking entrance to see what the color of the tag is')
-				rospy.sleep(5)
+
+				while entrance_search_counter < 80:
+
+					# FOR SIMULATION PURPOSES ONLY!!!!!!!!!!!!!
+					#################################################################################################
+					# if self.entrance_number_search == 3 and abs(self.current_local_z-self.entrance_search_z)<.5:
+					# 	self.verifyTAG_flag = 1
+					# 	self.tag_info.color = 'Green'
+					# 	self.tag_info.x = self.current_local_x
+					# 	self.tag_info.y = self.current_local_y
+					#################################################################################################
+
+					self.verifyTag()
+					entrance_search_counter = entrance_search_counter + 1
+
 				self.entrance_search_WPS_FLAG[2] = 1
 		else:
 			rospy.loginfo('Could not find tag at current entrance')
@@ -578,18 +700,48 @@ def main():
 			if abs(K.current_local_z - K.entrance_search_z) < .1:
 				rospy.logwarn("Reached Takeoff Height")	
 				K.resetStates()
-				K.ENTRANCESEARCH = 1
+				K.GOTOBUILDING = 1
 
+		if K.GOTOBUILDING:
+
+			rospy.loginfo('Headed to building for entrance search')
+			K.positionSp.header.frame_id = 'local_origin'
+			K.positionSp.pose.position.x = K.entrance_search_FRONT_x
+			K.positionSp.pose.position.y = K.entrance_search_LEFT_y
+			K.positionSp.pose.position.z = 10
+
+			if abs(K.current_local_x - K.entrance_search_FRONT_x)<= 1 and abs(K.current_local_y - K.entrance_search_LEFT_y) <= 1:
+
+				K.positionSp.pose.position.z = K.entrance_search_z
+				quaternion_yaw = quaternion_from_euler(0, 0, K.yaw_front_z)
+				K.positionSp.pose.orientation = Quaternion(*quaternion_yaw)
+
+				if abs(K.current_local_z-K.entrance_search_z) < 0.5 and abs(K.current_yaw-K.yaw_front_z) <= 0.2:
+
+					K.resetStates()
+					K.ENTRANCESEARCH = 1
 
 		if K.ENTRANCESEARCH:
-			rospy.loginfo('Drone searching for entrance')
-			if (K.unblocked_entrance_found_flag == 1) and (K.completed_full_rev == 1):
+			K.verifyTag()
+			rospy.loginfo('Searching for entrance')
+			if (K.green_tag.found == 1) and (K.completed_full_rev == 1):
 				rospy.logwarn('Unblocked entrance successfully found!')
 				K.resetStates()
 				K.ENTERBUILDING = 1
+				rospy.loginfo('Number of Blue Tags found and locations (x/y):')
+				rospy.loginfo(K.blue_tag.total_num)
+				rospy.loginfo(K.blue_tag.x)
+				rospy.loginfo(K.blue_tag.y)
+				rospy.loginfo('Green Tag found at location (x/y):')
+				rospy.loginfo(K.green_tag.x)
+				rospy.loginfo(K.green_tag.y)
+				rospy.loginfo('Number of Red Tags found and locations (x/y):')
+				rospy.loginfo(K.red_tag.total_num)
+				rospy.loginfo(K.red_tag.x)
+				rospy.loginfo(K.red_tag.y)
 
-			elif (K.unblocked_entrance_found_flag == 0) and (K.completed_full_rev == 1):
-				if K.entrance_number_search == 1:
+			elif (K.green_tag.found == 0) and (K.completed_full_rev == 1):
+				if K.entrance_number_search == 1:	# This variable is set in the EntranceSearch code
 					K.EntranceSearch(K.building_entr1_x,K.building_entr1_y,K.yaw_building_entr1)
 					rospy.loginfo('Checking first entrance')
 				elif K.entrance_number_search == 2:
@@ -606,8 +758,29 @@ def main():
 				K.BuildingScan()
 
 		if K.ENTERBUILDING:
-			rospy.loginfo('Drone entering building')
-			#Execute Enter Building algorithm
+			# AS CODE IS WRITTEN, IT WILL GO TO WHERE THE DRONE WAS (WITH SAME ORIENTATION) WHEN IT DETECTED THE GREEN TAG, NOT THE DETECTED LOCATION OF THE GREEN TAG
+			if K.enter_bldg_flag[0] == 0:
+				if abs(K.current_local_x-K.green_tag.drone_x) > 1 or abs(K.current_local_y-K.green_tag.drone_y) > 1:
+					K.positionSp.pose.position.z = 10
+					if abs(K.current_local_z - 10) < .5:
+						K.positionSp.pose.position.x = K.green_tag.drone_x
+						K.positionSp.pose.position.y = K.green_tag.drone_y
+				else:
+					K.enter_bldg_flag[0] = 1
+			elif K.enter_bldg_flag[1] == 0:
+				if abs(K.current_local_x-K.green_tag.drone_x) < 1 and abs(K.current_local_y-K.green_tag.drone_y) < 1:
+					K.positionSp.pose.position.z = K.entrance_search_z
+					
+					quaternion_yaw = quaternion_from_euler(0, 0, K.enter_bldg_orien)
+					K.positionSp.pose.orientation = Quaternion(*quaternion_yaw)
+
+					K.enter_bldg_flag[1] = 1
+			elif K.enter_bldg_flag[2] == 0:
+				if abs(K.current_local_z - K.entrance_search_z) < .2 and abs(K.current_local_x-K.green_tag.drone_x) < .2 and abs(K.current_local_y-K.green_tag.drone_y) < .2:
+
+					K.enter_bldg_flag[2] = 1
+
+				
 			#if Enter Building is success
 				#rospy.logwarn('Vehicle successfully')
 				#K.resetStates()

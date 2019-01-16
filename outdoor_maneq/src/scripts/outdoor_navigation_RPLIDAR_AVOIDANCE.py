@@ -215,6 +215,26 @@ class Controller:
 		self.RELEASE.data = 80
 		self.gripper_flag = True
 
+	################################# RPLIDAR STUFF ##################################
+		self.tf_listener = tf.TransformListener()
+		yaw_degrees = 0  # North
+		yaw = math.radians(yaw_degrees)
+		quaternion = quaternion_from_euler(0, 0, yaw)
+		self.positionSp.pose.orientation = Quaternion(*quaternion)
+
+		self.front=np.zeros(60)
+		self.left=np.zeros(30)
+		self.right=np.zeros(30)
+		self.back=np.zeros(60)
+		self.minfront=min(abs(self.front))
+		self.minleft=min(abs(self.left))
+		self.minright=min(abs(self.right))
+		self.minback=min(abs(self.back))
+
+		self.tried_left = 0
+		self.tried_right = 0
+		self.avoid_radius = 5
+
 	def resetStates(self):
 		self.TAKEOFF = 0
 		self.WAYPOINT1 = 0
@@ -268,6 +288,22 @@ class Controller:
 				self.IS_LANDED = True
 			else:
 				self.IS_LANDED = False
+				
+
+	#---------------------------------RPLIDAR AVOIDANCE-----------------------------------#
+	#######################################################################################
+	def rangessCb(self, msg):
+		if msg is not None:
+			self.front = msg.ranges[145:204]#Grabs values as [350:359, 0:10] going CCW rotation
+			#print(self.front)
+			self.left = msg.ranges[255:284]
+			#print(self.left)
+			self.right = msg.ranges[75:104]
+			#print(self.right)
+			self.back = [msg.ranges[330:359],msg.ranges[0:29]]
+	#######################################################################################
+
+
 
 	def setWayoints_and_Fence(self):
 
@@ -494,6 +530,115 @@ class Controller:
 		#	EmergencyLandOutside:	{'Done', 'Running'}	   # state should go to EmergencyLandOutside when Battery Low and current state is before EnterBuilding state
 		#	EmergencyLandInside:	{'Done', 'Running'}    # state should go to EmergencyLandInside when Battery Low and current state is, or is after, EnterBuilding state
 
+	def transformationoffcu(self, msg):
+		br = tf.TransformBroadcaster()
+		br.sendTransform((msg.pose.position.x, msg.pose.position.y, msg.pose.position.z),(msg.pose.orientation.x,msg.pose.orientation.y,msg.pose.orientation.z,msg.pose.orientation.w),rospy.Time.now(),"fcu","local_origin")
+
+	def check_and_avoid(self,angle):
+
+		self.front=list(self.front)
+		self.right=list(self.right)
+		self.left=list(self.left)
+
+		i=0
+		for x in self.front:
+			if x < .3:
+				self.front[i] = 1000
+			i=i+1
+
+		self.left=list(self.left)
+		i=0;
+		for x in self.left:	
+			if x < .3:
+				self.left[i] = 1000
+			i=i+1
+
+			
+		self.right=list(self.right)
+		i=0;
+		for x in self.right:
+			if x < .3:
+				self.right[i] = 1000
+			i=i+1
+		
+		self.minfront=min(self.front)
+		self.minleft=min(self.left)
+		self.minright=min(self.right)
+		self.minback=min(self.back)
+		print(self.minfront)
+		print(self.minleft)
+		print(self.minright)
+		
+		print('tried_left')
+		print(self.tried_left)
+		print('tried_right')
+		print(self.tried_right)
+		target_alt = 1.5
+		
+		if (self.minfront < 10 and self.minfront>.3):
+
+			if (self.minleft >= self.minright) and (self.minleft > 10 or self.minleft<0.3) and (self.tried_right ==0):
+				if (self.minfront < 10 ):
+					rospy.loginfo("Going Left")
+					self.positionSp.pose.position.x =self.current_local_x
+					self.positionSp.pose.position.y = self.current_local_y
+					self.positionSp.pose.position.z = target_alt
+					yaw = angle
+					quaternion = quaternion_from_euler(0, 0, yaw)
+					self.positionSp.pose.orientation = Quaternion(*quaternion)
+
+
+					self.tf_listener.waitForTransform("/fcu", "/local_origin", rospy.Time.now(), rospy.Duration(10.0))
+					self.positionSp = self.tf_listener.transformPose("/fcu", self.positionSp)
+
+
+					self.positionSp.pose.position.x =self.positionSp.pose.position.x-1
+					self.positionSp.pose.position.y = self.positionSp.pose.position.y+20
+					self.positionSp.pose.position.z = target_alt
+				
+
+					self.tf_listener.waitForTransform("/fcu", "/local_origin", rospy.Time.now(), rospy.Duration(10.0))
+					self.positionSp = self.tf_listener.transformPose("/local_origin", self.positionSp)
+
+					self.positionSp.pose.position.z=target_alt
+					self.positionSp.header.frame_id = 'local_origin'
+					yaw = angle
+					quaternion = quaternion_from_euler(0, 0, yaw)
+					self.positionSp.pose.orientation = Quaternion(*quaternion)
+					self.avoid_pub.publish(self.positionSp)
+					
+
+
+			elif (self.minright >= self.minleft) and (self.minright > 10  or self.minright<0.3):
+
+				if (self.minfront < 10 ):
+					rospy.loginfo("Going Right")
+					self.positionSp.pose.position.x =self.current_local_x
+					self.positionSp.pose.position.y = self.current_local_y
+					self.positionSp.pose.position.z = target_alt
+					self.tf_listener.waitForTransform("/fcu", "/local_origin", rospy.Time.now(), rospy.Duration(10.0))
+					self.positionSp = self.tf_listener.transformPose("/fcu", self.positionSp)
+
+					self.positionSp.pose.position.x =self.positionSp.pose.position.x-1
+					self.positionSp.pose.position.y = self.positionSp.pose.position.y-20
+					self.positionSp.pose.position.z = target_alt
+				
+				
+					self.tf_listener.waitForTransform("/fcu", "/local_origin", rospy.Time.now(), rospy.Duration(10.0))
+					self.positionSp = self.tf_listener.transformPose("/local_origin", self.positionSp)
+
+					self.positionSp.pose.position.z=target_alt
+					self.positionSp.header.frame_id = 'local_origin'
+					yaw = angle
+					quaternion = quaternion_from_euler(0, 0, yaw)
+					self.positionSp.pose.orientation = Quaternion(*quaternion)
+
+					self.avoid_pub.publish(self.positionSp)
+					self.tried_right = 1
+
+		else: 
+			self.tried_right = 0			
+
 def main():
 	rospy.init_node('gps_setpoint_node', anonymous=True)
 	rospy.logwarn("GPS setpoints node is started")
@@ -513,6 +658,17 @@ def main():
 
 	# Subscriber: object_localization setpoints
 	rospy.Subscriber("/detected_object_3d_pos", PoseStamped, K.objectPoseCb)
+
+
+
+	####################################################################################################
+	#----------------------------------------AVOIDANCE-------------------------------------------------#
+	####################################################################################################
+	rospy.Subscriber("mavros/local_position/pose", PoseStamped, K.transformationoffcu)
+	# FOR RPLIDAR
+	rospy.Subscriber("scan", LaserScan, K.rangessCb)
+	####################################################################################################
+
 
 	########## Publishers ##########
 
@@ -574,8 +730,8 @@ def main():
 		if K.TAKEOFF:
 			rospy.logwarn('Vehicle is taking off')
 			K.positionSp.header.frame_id = 'local_origin' # IS THIS NEEDED?
-			K.positionSp.pose.position.x = K.home_x 
-			K.positionSp.pose.position.y = K.home_y
+			K.positionSp.pose.position.x = K.current_local_x 
+			K.positionSp.pose.position.y = K.current_local_y
 			K.positionSp.pose.position.z = K.takeoff_height # Should be 1
 
 			rospy.loginfo('Home X Position')
@@ -592,68 +748,83 @@ def main():
 				K.WAYPOINT1 = 1
 
 		if K.WAYPOINT1:
-			rospy.loginfo('Vehicle heading to waypoint 1')
+			angle = math.atan2((K.waypoint1_y-K.current_local_y),(K.waypoint1_x-K.current_local_x))			
+			K.check_and_avoid(angle)
 
-			K.positionSp.header.frame_id = 'local_origin'
-			K.positionSp.pose.position.x = K.waypoint1_x
-			K.positionSp.pose.position.y = K.waypoint1_y
-			K.positionSp.pose.position.z = K.waypoint1_z
+			if (K.minfront>10 ):
+				rospy.loginfo('Vehicle heading to waypoint 1')
+				K.positionSp.header.frame_id = 'local_origin'
+				K.positionSp.pose.position.x = K.waypoint1_x
+				K.positionSp.pose.position.y = K.waypoint1_y
+				K.positionSp.pose.position.z = K.waypoint1_z
+				# North
+				yaw = angle
+				quaternion = quaternion_from_euler(0, 0, yaw)
+				K.positionSp.pose.orientation = Quaternion(*quaternion)
+				tempz1 = K.waypoint1_z
+				rospy.loginfo('Waypoint1_z')
+				rospy.loginfo(tempz1)
 
-			# K.maxvelocity.param_id = 'MPC_XY_VEL_MAX'
-			# K.maxvelocity.value = 2
-			# rospy.logwarn('Am about to try to set velocity')
-			# K.modes.setVelocity(K.maxvelocity)
-			# rospy.logwarn('Just tried to set velocity parameter')
+				tempx = K.current_local_x - K.waypoint1_x
+				rospy.loginfo('Current_x - Waypoint1_x')
+				rospy.loginfo(tempx)
 
-			tempz1 = K.waypoint1_z
-			rospy.loginfo('Waypoint1_z')
-			rospy.loginfo(tempz1)
+				tempy = K.current_local_y - K.waypoint1_y
+				rospy.loginfo('Current_y - Waypoint1_y')
+				rospy.loginfo(tempy)
 
-			tempx = K.current_local_x - K.waypoint1_x
-			rospy.loginfo('Current_x - Waypoint1_x')
-			rospy.loginfo(tempx)
+				tempz = K.current_local_z - K.waypoint1_z
+				rospy.loginfo('Current_z - Waypoint1_z')
+				rospy.loginfo(tempz)
 
-			tempy = K.current_local_y - K.waypoint1_y
-			rospy.loginfo('Current_y - Waypoint1_y')
-			rospy.loginfo(tempy)
-
-			tempz = K.current_local_z - K.waypoint1_z
-			rospy.loginfo('Current_z - Waypoint1_z')
-			rospy.loginfo(tempz)
-
-			if abs(K.current_local_x - K.waypoint1_x)<= 1 and abs(K.current_local_y - K.waypoint1_y) <= 1 and abs(K.current_local_z - K.waypoint1_z) <= 0.5:   # Rules give a 3m radius from goal
-				rospy.loginfo("Current position close enough to desired waypoint")
-				rospy.loginfo("Reached waypoint 1")
-				K.resetStates()
-				K.WAYPOINT2 = 1
+				K.avoidancepar =1
+             
+				if abs(K.current_local_x - K.waypoint1_x)<= 1 and abs(K.current_local_y - K.waypoint1_y) <= 1 and abs(K.current_local_z - K.waypoint1_z) <= 0.5:   # Rules give a 3m radius from goal
+					rospy.loginfo("Current position close enough to desired waypoint")
+					rospy.loginfo("Reached waypoint 1")
+					K.resetStates()
+					K.WAYPOINT2 = 1
 
 		if K.WAYPOINT2:
-			rospy.loginfo('Vehicle heading to waypoint 2')
+			angle = math.atan2((K.waypoint2_y-K.current_local_y),(K.waypoint2_x-K.current_local_x))
+			K.check_and_avoid(angle)
+			if (K.minfront>10):
+				rospy.loginfo('Vehicle heading to waypoint 2')
+			
+				K.positionSp.header.frame_id = 'local_origin'
+				K.positionSp.pose.position.x = K.waypoint2_x
+				K.positionSp.pose.position.y = K.waypoint2_y
+				K.positionSp.pose.position.z = K.waypoint2_z
+				yaw = angle
+				quaternion = quaternion_from_euler(0, 0, yaw)
+				K.positionSp.pose.orientation = Quaternion(*quaternion)
 
-			K.positionSp.header.frame_id = 'local_origin'
-			K.positionSp.pose.position.x = K.waypoint2_x
-			K.positionSp.pose.position.y = K.waypoint2_y
-			K.positionSp.pose.position.z = K.waypoint2_z
-
-			if abs(K.current_local_x - K.waypoint2_x)<= 1 and abs(K.current_local_y - K.waypoint2_y) <= 1 and abs(K.current_local_z - K.waypoint2_z) <= 0.5:   # Rules give a 3m radius from goal
-				rospy.loginfo("Current position close enough to desired waypoint")
-				rospy.loginfo("Reached waypoint 2")
-				K.resetStates()
-				K.WAYPOINT3 = 1
+				if abs(K.current_local_x - K.waypoint2_x)<= 1 and abs(K.current_local_y - K.waypoint2_y) <= 1 and abs(K.current_local_z - K.waypoint2_z) <= 0.5:   # Rules give a 3m radius from goal
+					rospy.loginfo("Current position close enough to desired waypoint")
+					rospy.loginfo("Reached waypoint 2")
+					K.resetStates()
+					K.WAYPOINT3 = 1
+				K.avoidancepar = 1
 
 		if K.WAYPOINT3:
-			rospy.loginfo('Vehicle heading to waypoint 3')
+			angle = math.atan2((K.waypoint2_y-K.current_local_y),(K.waypoint2_x-K.current_local_x))
+			K.check_and_avoid(angle)
+			if (K.minfront>10 ):
+				rospy.loginfo('Vehicle heading to waypoint 3')
+				K.positionSp.header.frame_id = 'local_origin'
+				K.positionSp.pose.position.x = K.waypoint3_x
+				K.positionSp.pose.position.y = K.waypoint3_y
+				K.positionSp.pose.position.z = K.waypoint3_z
+				yaw = angle
+				quaternion = quaternion_from_euler(0, 0, yaw)
+				K.positionSp.pose.orientation = Quaternion(*quaternion)
 
-			K.positionSp.header.frame_id = 'local_origin'
-			K.positionSp.pose.position.x = K.waypoint3_x
-			K.positionSp.pose.position.y = K.waypoint3_y
-			K.positionSp.pose.position.z = K.waypoint3_z
-
-			if abs(K.current_local_x - K.waypoint3_x)<= 1 and abs(K.current_local_y - K.waypoint3_y) <= 1 and abs(K.current_local_z - K.waypoint3_z) <= 0.5:   # Rules give a 3m radius from goal
-				rospy.loginfo('Current position close enough to desired waypoint')
-				rospy.loginfo('Reached waypoint 3')
-				K.resetStates()
-				K.WORKER1SEARCH = 1
+				if abs(K.current_local_x - K.waypoint3_x)<= 1 and abs(K.current_local_y - K.waypoint3_y) <= 1 and abs(K.current_local_z - K.waypoint3_z) <= 0.5:   # Rules give a 3m radius from goal
+					rospy.loginfo('Current position close enough to desired waypoint')
+					rospy.loginfo('Reached waypoint 3')
+					K.resetStates()
+					K.WORKER1SEARCH = 1
+				K.avoidancepar =1
 
 		if K.WORKER1SEARCH:
 			rospy.loginfo('Vehicle searching for missing worker outside') 
