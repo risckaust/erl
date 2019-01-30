@@ -37,14 +37,6 @@ class fcuModes:
         except rospy.ServiceException, e:
             print "Service disarming call failed: %s"%e
 
-    def setStabilizedMode(self):
-        rospy.wait_for_service('mavros/set_mode')
-        try:
-            flightModeService = rospy.ServiceProxy('mavros/set_mode', mavros_msgs.srv.SetMode)
-            flightModeService(custom_mode='STABILIZED')
-        except rospy.ServiceException, e:
-            print "service set_mode call failed: %s. Stabilized Mode could not be set."%e
-
     def setOffboardMode(self):
         rospy.wait_for_service('mavros/set_mode')
         try:
@@ -52,22 +44,6 @@ class fcuModes:
             flightModeService(custom_mode='OFFBOARD')
         except rospy.ServiceException, e:
             print "service set_mode call failed: %s. Offboard Mode could not be set."%e
-
-    def setAltitudeMode(self):
-        rospy.wait_for_service('mavros/set_mode')
-        try:
-            flightModeService = rospy.ServiceProxy('mavros/set_mode', mavros_msgs.srv.SetMode)
-            flightModeService(custom_mode='ALTCTL')
-        except rospy.ServiceException, e:
-            print "service set_mode call failed: %s. Altitude Mode could not be set."%e
-
-    def setPositionMode(self):
-        rospy.wait_for_service('mavros/set_mode')
-        try:
-            flightModeService = rospy.ServiceProxy('mavros/set_mode', mavros_msgs.srv.SetMode)
-            flightModeService(custom_mode='POSCTL')
-        except rospy.ServiceException, e:
-            print "service set_mode call failed: %s. Position Mode could not be set."%e
 
     def setAutoLandMode(self):
         rospy.wait_for_service('mavros/set_mode')
@@ -133,13 +109,13 @@ class Controller:
 
 		#----------------Start state: Uncomment one-----------------#
 		#############################################################
-		self.start_state = 'LOADPACKAGE1'
+		# self.start_state = 'LOADPACKAGE1'
 		# self.start_state = 'WAYPOINT1'
 		# self.start_state = 'WAYPOINT2'
 		# self.start_state = 'WAYPOINT3'
 		# self.start_state = 'WAYPOINT4'
 		# self.start_state = 'WORKER1SEARCH'
-		# self.start_state = 'LOADPACKAGE2'
+		self.start_state = 'LOADPACKAGE2'
 		# self.start_state = 'GOTOBUILDING'
 		# self.start_state = 'WORKER2SEARCH'
 		# self.start_state = 'MAPPING'
@@ -173,13 +149,25 @@ class Controller:
 		self.waypoint4_lat = 39.0952322
 		self.waypoint4_alt = 4
 
+		self.worker1_search_WP1_lat = 47.3976837 # Simulation value
+		self.worker1_search_WP1_lon = 8.5455425 # Simulation value
+		self.worker1_search_WP2_lat = 47.3976752 # Simulation value
+		self.worker1_search_WP2_lon = 8.545879 # Simulation value
+		self.worker1_search_WP3_lat = 47.3978011 # Simulation value
+		self.worker1_search_WP3_lon = 8.5458906 # Simulation value
+		self.worker1_search_WP4_lat = 47.3978116 # Simulation value
+		self.worker1_search_WP4_lon = 8.545534 # Simulation value
+
 		# ----THIS INFO IS ONLY IF WE DON'T WANT TO BASE SEARCH OFF OF BUILDING GPS CENTER POINT----#
 		#############################################################################################
-		# These are the close/right (corner1) and far/left (corner2) corners for the building respectively
-		self.bldg_search_corner1_lat = 47.3977007 # 47.3977007 FOR SIMULATION, close/right latitude value
-		self.bldg_search_corner1_lon = 8.54546	# 8.54546 FOR SIMULATION, close/right longitude value
-		self.bldg_search_corner2_lat = 47.3977828 # 47.3977828 FOR SIMULATION, far/left latitude value
-		self.bldg_search_corner2_lon = 8.545595 # 8.545595 FOR SIMULATION, far/left longitude value
+		self.bldg_search_corner1_lat = 47.3976247 # Looking down at the play-field, this corner is the top right
+		self.bldg_search_corner1_lon = 8.5455773	# Looking down at the play-field, this corner is the top right
+		self.bldg_search_corner2_lat = 47.3978486 # Looking down at the play-field, this corner is the top left
+		self.bldg_search_corner2_lon = 8.5455894 # Looking down at the play-field, this corner is the top left
+		self.bldg_search_corner3_lat = 47.3978593 # Looking down at the play-field, this corner is the bottom left
+		self.bldg_search_corner3_lon = 8.5454345 # Looking down at the play-field, this corner is the bottom left
+		self.bldg_search_corner4_lat = 47.3976353 # Looking down at the play-field, this corner is the bottom right
+		self.bldg_search_corner4_lon = 8.5454157 # Looking down at the play-field, this corner is the bottom right
 		#############################################################################################
 
 		# Outside Worker Search Variables in GPS
@@ -187,16 +175,18 @@ class Controller:
 		self.building_center_lat = 22.317575 # 22.317575 Roughly the center of the KAUST field
 		self.building_center_lon = 39.0984	# 39.0984 Roughly the center of the KAUST field
 
-		self.building_entr1_lat = 0	# I haven't set these yet
-		self.building_entr1_lon = 0
-		self.building_entr2_lat = 0
-		self.building_entr2_lon = 0
-		self.building_entr3_lat = 0
-		self.building_entr3_lon = 0
-
-		self.yaw_building_entr1 = pi # MAYBE SHOULD BE CHANGED? THIS WILL DEPEND ON DRONE BOOTUP ORIENTATION (currently, we'd have to make sure that the drone is started with 0 deg exactly North)
-		self.yaw_building_entr2 = pi/2 # ditto
-		self.yaw_building_entr3 = -pi/2	# ditto
+		self.building_entr1_lat = 47.3976886 # Simulation value
+		self.building_entr1_lon = 8.5455664 # Simulation value
+		self.building_entr2_lat = 47.3977426 # Simlulation value
+		self.building_entr2_lon = 8.5455635 # Simulation value
+		self.building_entr3_lat = 47.3977974 # Simulation value
+		self.building_entr3_lon = 8.5455657 # Simulation value
+		self.building_entr4_lat = 47.3977978 # Simulation value
+		self.building_entr4_lon = 8.5454486 # Simulation value
+		self.building_entr5_lat = 47.3977479 # Simulation value
+		self.building_entr5_lon = 8.5454492 # Simulation value
+		self.building_entr6_lat = 47.3976925 # Simulation value
+		self.building_entr6_lon = 8.5454473 # Simulation value
 
 	###################################################################################################################
 	#--------------------------------------- VARIABLES USED IN CODE --------------------------------------------------# 
@@ -241,26 +231,21 @@ class Controller:
 
 		#-----------------------Field Setup------------------------#
 		############################################################
-
-		self.home_lat = 0
-		self.home_lon = 0
+		self.home_lat = self.landing_zone_lat # Starting location is the landing_zone_lat unless updated to be set at the actual local origin (0,0)
+		self.home_lon = self.landing_zone_lon # Starting location is the landing_zone_lon unless updated to be set at the actual local origin (0,0)
 
 		self.landing_zone_x = 0
 		self.landing_zone_y = 0
 
-		self.home_x = 0
-		self.home_y = 0
-		self.home_z = 0
-
-		self.x_FenceLimit_max = 30 # 300 meters downfield from the starting position
-		self.x_FenceLimit_min = -20 # 5 meters behind the starting the position 
+		self.x_FenceLimit_max = 100 # 300 meters downfield from the starting position
+		self.x_FenceLimit_min = -100 # 5 meters behind the starting the position 
 		self.y_FenceLimit_max = 15 # 15 meters to the left of the starting position
 		self.y_FenceLimit_min = -15 # 15 meters to the right of the starting position
 
-		self.x_fence_max_warn = self.x_FenceLimit_max - 2 #29 # 295 meters downfield from the starting position
-		self.x_fence_min_warn = self.x_FenceLimit_min + 2 #-4 # 5 meters in back of starting position
-		self.y_fence_max_warn = self.y_FenceLimit_max - 2 #14 # 14 meters to the left of starting position
-		self.y_fence_min_warn = self.y_FenceLimit_min + 2 #-14 # 14 meters to the right of the starting position
+		self.x_fence_max_warn = self.x_FenceLimit_max - 1 #29 # 295 meters downfield from the starting position
+		self.x_fence_min_warn = self.x_FenceLimit_min + 1 #-4 # 5 meters in back of starting position
+		self.y_fence_max_warn = self.y_FenceLimit_max - 1 #14 # 14 meters to the left of starting position
+		self.y_fence_min_warn = self.y_FenceLimit_min + 1 #-14 # 14 meters to the right of the starting position
 		self.z_limit_warn = 35 # Maximum height above ground that drone is allowed to go (MAX height is 40 meters - TO BE VERIFIED BY COMPETITION ORGANIZERS)
 
 		self.building_center_x = -5#10
@@ -322,6 +307,9 @@ class Controller:
 		self.waypoint4_y = 0
 		self.waypoint4_z = 1.5
 
+		# Used in Execute_Waypoint function
+		self.waypoint_status_flag = [0, 0, 0]
+
 		#-----------------Worker Search Variables-----------------#
 		###########################################################
 
@@ -336,15 +324,19 @@ class Controller:
 		self.bridge = CvBridge()
 
 		#------------------WORKER1-------------------#
-		self.worker1_search_FAR_x = 0 
-		self.worker1_search_NEAR_x = 0 
-		self.worker1_search_LEFT_y = 0
-		self.worker1_search_RIGHT_y = 0
+		self.worker1_search_WP1_x = -5
+		self.worker1_search_WP1_y = -7.5
+		self.worker1_search_WP2_x = 30-7.5
+		self.worker1_search_WP2_y = -7.5
+		self.worker1_search_WP3_x = 30-7.5
+		self.worker1_search_WP3_y = 7.5
+		self.worker1_search_WP4_x = -5
+		self.worker1_search_WP4_y = 7.5
 		self.worker1_search_z = 8
 
 		self.worker1_found_flag = 0
 
-		self.worker1_search_WP_FLAG = [0, 0, 0]
+		self.worker1_search_WP_FLAG = 0
 
 		self.worker1Sp = PoseStamped()
 
@@ -353,34 +345,51 @@ class Controller:
 
 		self.worker2_found_flag = 0
 
-		# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1THERE WILL BE MORE VARIABLES HERE AFTER NEW AVOIDANCE PACKAGE ADDED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!THERE WILL BE MORE VARIABLES HERE AFTER NEW AVOIDANCE PACKAGE ADDED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 		#---------------ENTRANCE SEARCH VARIABLES-----------------#
 		###########################################################
 
-		self.building_entr1_x = self.building_center_x + 5
-		self.building_entr1_y = self.building_center_y + 3
-		self.building_entr2_x = self.building_center_x
-		self.building_entr2_y = self.building_center_y - 5
-		self.building_entr3_x = self.building_center_x
-		self.building_entr3_y = self.building_center_y + 5
-
 		# Positive x is downfield, positive y is to the left
-		self.entrance_search_FRONT_x = self.building_center_x - 5#13 # 3 meters in front of buliding looking towards it
-		self.entrance_search_RIGHT_y = self.building_center_y - 5#13 # 3 meters to the right of the building
-		self.entrance_search_BACK_x = self.building_center_x + 5#13 # 3 meters in back of the building
-		self.entrance_search_LEFT_y = self.building_center_y + 5#13
+		self.entrance_search_corner1_x = 0 # Looking down at the play-field, this corner is the top right
+		self.entrance_search_corner1_y = -13 # Looking down at the play-field, this corner is the top right
+		self.entrance_search_corner2_x = 0 # Looking down at the play-field, this corner is the top left
+		self.entrance_search_corner2_y = 13 # Looking down at the play-field, this corner is the top left
+		self.entrance_search_corner3_x = -13 # Looking down at the play-field, this corner is the bottom left
+		self.entrance_search_corner3_y = 13 # Looking down at the play-field, this corner is the bottom left
+		self.entrance_search_corner4_x = -13 # Looking down at the play-field, this corner is the bottom right
+		self.entrance_search_corner4_y = -13 # Looking down at the play-field, this corner is the bottom right
 		self.entrance_search_z = 1
 
-		# Yaw angles so that drone will always face a side of the building
-		self.yaw_front_z = 0
-		self.yaw_right_z = pi/2
-		self.yaw_back_z = pi
-		self.yaw_left_z = -pi/2
+		# Yaw angles so that drone will always face a side of the building. THIS ASSUMES CORNERS ARE PLACED ACCORDING TO GIVEN CONVENTION
+		self.yaw_top_z = atan2((self.entrance_search_corner4_y-self.entrance_search_corner1_y),(self.entrance_search_corner4_x-self.entrance_search_corner1_x))
+		self.yaw_right_z = atan2((self.entrance_search_corner2_y-self.entrance_search_corner1_y),(self.entrance_search_corner2_x-self.entrance_search_corner1_x))
+		self.yaw_bottom_z = atan2((self.entrance_search_corner1_y-self.entrance_search_corner4_y),(self.entrance_search_corner1_x-self.entrance_search_corner4_x))
+		self.yaw_left_z = atan2((self.entrance_search_corner1_y-self.entrance_search_corner2_y),(self.entrance_search_corner1_x-self.entrance_search_corner2_x))
+
+		self.building_entr1_x = -2
+		self.building_entr1_y = -6
+		self.building_entr2_x = -2
+		self.building_entr2_y = 0
+		self.building_entr3_x = -2
+		self.building_entr3_y = 6
+		self.building_entr4_x = -11
+		self.building_entr4_y = 6
+		self.building_entr5_x = -11
+		self.building_entr5_y = 0
+		self.building_entr6_x = -11
+		self.building_entr6_y = -6
+
+		self.yaw_building_entr1 = self.yaw_top_z
+		self.yaw_building_entr2 = self.yaw_top_z
+		self.yaw_building_entr3 = self.yaw_top_z
+		self.yaw_building_entr4 = self.yaw_bottom_z
+		self.yaw_building_entr5 = self.yaw_bottom_z
+		self.yaw_building_entr6 = self.yaw_bottom_z
 
 		# Variables to handle transitions within the state (i.e. reaching the updated yaw position before actually heading to the next corner)
 		self.entrance_number_search = 1
-		self.building_scan_WPS_FLAG = [0, 0, 0, 0, 0]
+		self.building_scan_WP_FLAG = 2
 		self.entrance_search_WPS_FLAG = [0, 0, 0]
 
 		self.red_tag = RedTag()
@@ -618,13 +627,19 @@ class Controller:
 
 		#UNCOMMENT THIS CODE FOR GPS USE
 		#####################################################################################################################################
-		# self.home_lat = self.current_lat
-		# self.home_lon = self.current_lon
+		(self.home_lat, self.home_lon, _) = pm.enu2geodetic(0,0,0,self.current_lat,self.current_lon,0)
 
 		# self.x_FenceLimit_max, self.y_FenceLimit_max, _ = pm.geodetic2enu(self.lat_max, self.lon_max, self.z_limit, self.current_lat, self.current_lon, self.current_alt)
 		# self.x_FenceLimit_min, self.y_FenceLimit_min, _ = pm.geodetic2enu(self.lat_min, self.lon_min, self.z_limit, self.current_lat, self.current_lon, self.current_alt)
 		# rospy.loginfo('Successfully set fence limit maxes and mins')
 
+		# self.x_fence_max_warn = self.x_FenceLimit_max - 2
+		# self.x_fence_min_warn = self.x_FenceLimit_min + 2
+		# self.y_fence_max_warn = self.y_FenceLimit_max - 2
+		# self.y_fence_min_warn = self.y_FenceLimit_min + 2
+		# self.z_limit_warn = self.z_limit - .5
+
+		## Should be very close to (0,0) in local coordinate frame
 		# self.landing_zone_x, self.landing_zone_y, _ = pm.geodetic2enu(self.landing_zone_lat, self.landing_zone_lon, self.z_limit, self.current_lat, self.current_lon, self.current_alt)
 
 		# self.waypoint1_x, self.waypoint1_y, _ = pm.geodetic2enu(self.waypoint1_lat, self.waypoint1_lon, self.waypoint1_alt, self.current_lat, self.current_lon, self.current_alt)
@@ -633,24 +648,39 @@ class Controller:
 		# self.waypoint4_x, self.waypoint4_y, _ = pm.geodetic2enu(self.waypoint4_lat, self.waypoint4_lon, self.waypoint4_alt, self.current_lat, self.current_lon, self.current_alt)
 		# rospy.loginfo('Successfully set waypoints to x,y,z')
 
-		# self.x_fence_max_warn = self.x_FenceLimit_max - 2
-		# self.x_fence_min_warn = self.x_FenceLimit_min + 2
-		# self.y_fence_max_warn = self.y_FenceLimit_max - 2
-		# self.y_fence_min_warn = self.y_FenceLimit_min + 2
-		# self.z_limit_warn = self.z_limit - .5
+		self.worker1_search_WP1_x, self.worker1_search_WP1_y, _ = pm.geodetic2enu(self.worker1_search_WP1_lat, self.worker1_search_WP1_lon, self.worker1_search_z, self.current_lat, self.current_lon, self.current_alt)
+		self.worker1_search_WP2_x, self.worker1_search_WP2_y, _ = pm.geodetic2enu(self.worker1_search_WP2_lat, self.worker1_search_WP2_lon, self.worker1_search_z, self.current_lat, self.current_lon, self.current_alt)
+		self.worker1_search_WP3_x, self.worker1_search_WP3_y, _ = pm.geodetic2enu(self.worker1_search_WP3_lat, self.worker1_search_WP3_lon, self.worker1_search_z, self.current_lat, self.current_lon, self.current_alt)
+		self.worker1_search_WP4_x, self.worker1_search_WP4_y, _ = pm.geodetic2enu(self.worker1_search_WP4_lat, self.worker1_search_WP4_lon, self.worker1_search_z, self.current_lat, self.current_lon, self.current_alt)
 
 		# self.building_center_x, self.building_center_y, _ = pm.geodetic2enu(self.building_center_lat, self.building_center_lon, self.z_limit, self.current_lat, self.current_lon, self.current_alt)
 
-		# self.building_entr1_x, self.building_entr1_y, _ = pm.geodetic2enu(self.building_entr1_lat, self.building_entr1_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
-		# self.building_entr2_x, self.building_entr2_y, _ = pm.geodetic2enu(self.building_entr2_lat, self.building_entr2_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
-		# self.building_entr3_x, self.building_entr3_y, _ = pm.geodetic2enu(self.building_entr3_lat, self.building_entr3_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
-
-
-		# #----- UNCOMMENT THIS ONLY IF YOU WANT TO SPECIFY LOCAL ENTRANCE SEARCH PATH BASED ON GPS LOCATIONS OF TWO CORNERs OF SQUARE PATH INSTEAD OF BUILDING CENTER POINT ------ #
-		# self.entrance_search_FRONT_x, self.entrance_search_RIGHT_y, _ = pm.geodetic2enu(self.bldg_search_corner1_lat, self.bldg_search_corner1_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
-		# self.entrance_search_BACK_X, self.entrance_search_LEFT_y, _ = pm.geodetic2enu(self.bldg_search_corner2_lat, self.bldg_search_corner2_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
+		# #----- UNCOMMENT THIS ONLY IF YOU WANT TO SPECIFY LOCAL ENTRANCE SEARCH PATH BASED ON GPS LOCATIONS OF CORNERs OF SQUARE PATH INSTEAD OF BUILDING CENTER POINT ------ #
+		self.entrance_search_corner1_x, self.entrance_search_corner1_y, _ = pm.geodetic2enu(self.bldg_search_corner1_lat, self.bldg_search_corner1_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
+		self.entrance_search_corner2_x, self.entrance_search_corner2_y, _ = pm.geodetic2enu(self.bldg_search_corner2_lat, self.bldg_search_corner2_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
+		self.entrance_search_corner3_x, self.entrance_search_corner3_y, _ = pm.geodetic2enu(self.bldg_search_corner3_lat, self.bldg_search_corner3_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
+		self.entrance_search_corner4_x, self.entrance_search_corner4_y, _ = pm.geodetic2enu(self.bldg_search_corner4_lat, self.bldg_search_corner4_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
+		
+		self.yaw_top_z = atan2((self.entrance_search_corner4_y-self.entrance_search_corner1_y),(self.entrance_search_corner4_x-self.entrance_search_corner1_x))
+		self.yaw_right_z = atan2((self.entrance_search_corner2_y-self.entrance_search_corner1_y),(self.entrance_search_corner2_x-self.entrance_search_corner1_x))
+		self.yaw_bottom_z = atan2((self.entrance_search_corner1_y-self.entrance_search_corner4_y),(self.entrance_search_corner1_x-self.entrance_search_corner4_x))
+		self.yaw_left_z = atan2((self.entrance_search_corner1_y-self.entrance_search_corner2_y),(self.entrance_search_corner1_x-self.entrance_search_corner2_x))
 		# #-------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
 
+		self.building_entr1_x, self.building_entr1_y, _ = pm.geodetic2enu(self.building_entr1_lat, self.building_entr1_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
+		self.building_entr2_x, self.building_entr2_y, _ = pm.geodetic2enu(self.building_entr2_lat, self.building_entr2_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
+		self.building_entr3_x, self.building_entr3_y, _ = pm.geodetic2enu(self.building_entr3_lat, self.building_entr3_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
+		self.building_entr4_x, self.building_entr4_y, _ = pm.geodetic2enu(self.building_entr4_lat, self.building_entr4_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
+		self.building_entr5_x, self.building_entr5_y, _ = pm.geodetic2enu(self.building_entr5_lat, self.building_entr5_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
+		self.building_entr6_x, self.building_entr6_y, _ = pm.geodetic2enu(self.building_entr6_lat, self.building_entr6_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
+
+		# THESE WILL NEED TO BE UPDATED DEPENDING ON WHERE THE ENTRANCES ARE
+		self.yaw_building_entr1 = self.yaw_top_z
+		self.yaw_building_entr2 = self.yaw_top_z
+		self.yaw_building_entr3 = self.yaw_top_z
+		self.yaw_building_entr4 = self.yaw_bottom_z
+		self.yaw_building_entr5 = self.yaw_bottom_z
+		self.yaw_building_entr6 = self.yaw_bottom_z
 
 		#####################################################################################################################################
 
@@ -749,114 +779,41 @@ class Controller:
 		self.verifyPOI_flag = 0
 		self.counterCb = 0
 
-	def Worker1SearchPattern(self):
+	def Execute_Waypoint(self,waypoint_x,waypoint_y,waypoint_z,desired_yaw):
 
-		# Search algorithm is as follows: Drone follows a square pattern starting at the 
-		# closest right corner, goes down field on right side, turn left at the end of 
-		# the field, and comes back on left side. The search path side closest to the 
-		# control station is basically at the same distance downfield as the building. 
-		# Since the field is 30 meters wide, in order to span the entire field, the drone
-		# should search at about 8 meters high and 7.5 meters inward from the field boundaries.
+		done = 0
+		yaw_condition = 0
 
-		#!!!!!!!!!!!!!!!!!!!!!!!!! NOTE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		# Drone should go to altitude that is definitely above buliding after completing waypoint 3
-		#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		if desired_yaw == -1000: # desired_yaw was not specified. So yaw towards next waypoint.
+			desired_yaw = atan2((waypoint_y-self.current_local_y),(waypoint_x-self.current_local_x))
 
-		self.worker1_search_LEFT_y = self.y_FenceLimit_max - 7.5 # 7.5 meters from the left edge of the field
-		self.worker1_search_RIGHT_y = self.y_FenceLimit_min + 7.5 # 7.5 meters from the right edge of the field
+		self.positionSp.header.frame_id = 'local_origin'
+		quaternion_yaw = quaternion_from_euler(0, 0, desired_yaw)
+		self.positionSp.pose.orientation = Quaternion(*quaternion_yaw)
 
-		self.worker1_search_NEAR_x = self.entrance_search_FRONT_x # DRONE WILL START AT SAME DISTANCE DOWNFIELD AS NEAREST X POINT FOR ENTRANCE SEARCH
-		self.worker1_search_FAR_x = self.x_FenceLimit_max - 7.5 # STOP 7.5 METERS SHORT OF EDGE OF FIELD
-
-		if self.worker1_search_WP_FLAG[0] == 0:
-
-			self.positionSp.header.frame_id = 'local_origin'
-			desired_yaw = atan2((self.worker1_search_RIGHT_y-self.current_local_y),(self.worker1_search_NEAR_x-self.current_local_x))
-			quaternion_yaw = quaternion_from_euler(0, 0, desired_yaw)
-			self.positionSp.pose.orientation = Quaternion(*quaternion_yaw)
-
-			if abs(self.current_yaw-desired_yaw)<.3:
-
-				self.positionSp.pose.position.x = self.worker1_search_NEAR_x
-				self.positionSp.pose.position.y = self.worker1_search_RIGHT_y
-				self.positionSp.pose.position.z = self.worker1_search_z
-
-				if abs(self.current_local_x - self.worker1_search_NEAR_x)<= 1 and abs(self.current_local_y - self.worker1_search_RIGHT_y) <= 1 and abs(self.current_local_z - self.worker1_search_z) <= 0.5:
-					rospy.loginfo("Current position close enough to desired waypoint")
-					rospy.loginfo("Reached worker search waypoint 1")
-
-					#--------THIS IS SO I COULD GET THE GPS LOCATION AT THIS CORNER FROM THE LOG FILE---------#
-					###########################################################################################
-					self.current_signal = "Reached worker search waypoint 1"
-					###########################################################################################
-
-					self.worker1_search_WP_FLAG[0] = 1
-				
-		elif self.worker1_search_WP_FLAG[1] == 0:
-
-			self.positionSp.header.frame_id = 'local_origin'
-			desired_yaw = 0
-			quaternion_yaw = quaternion_from_euler(0, 0, desired_yaw)
-			self.positionSp.pose.orientation = Quaternion(*quaternion_yaw)
-
-			if abs(self.current_yaw-desired_yaw)<.1:
-
-				self.positionSp.pose.position.x = self.worker1_search_FAR_x
-				self.positionSp.pose.position.y = self.worker1_search_RIGHT_y
-				self.positionSp.pose.position.z = self.worker1_search_z
-
-				if abs(self.current_local_x - self.worker1_search_FAR_x)<= 1 and abs(self.current_local_y - self.worker1_search_RIGHT_y) <= 1 and abs(self.current_local_z - self.worker1_search_z) <= 0.5:
-					rospy.loginfo("Current position close enough to desired waypoint")
-					rospy.loginfo("Reached worker search waypoint 2")
-					self.worker1_search_WP_FLAG[1] = 1
-
-		elif self.worker1_search_WP_FLAG[2] == 0:
-
-			self.positionSp.header.frame_id = 'local_origin'
-			desired_yaw = pi/2
-			quaternion_yaw = quaternion_from_euler(0, 0, desired_yaw)
-			self.positionSp.pose.orientation = Quaternion(*quaternion_yaw)
-
-			if abs(self.current_yaw-desired_yaw)<.1:
-				self.positionSp.pose.position.x = self.worker1_search_FAR_x
-				self.positionSp.pose.position.y = self.worker1_search_LEFT_y
-				self.positionSp.pose.position.z = self.worker1_search_z
-				if abs(self.current_local_x - self.worker1_search_FAR_x)<= 1 and abs(self.current_local_y - self.worker1_search_LEFT_y) <= 1 and abs(self.current_local_z - self.worker1_search_z) <= 0.5:
-					rospy.loginfo("Current position close enough to desired waypoint")
-					rospy.loginfo("Reached worker search waypoint 3")
-
-					#--------THIS IS SO I COULD GET THE GPS LOCATION AT THIS CORNER FROM THE LOG FILE---------#
-					###########################################################################################
-					self.current_signal = "Reached worker search waypoint 3"
-					###########################################################################################
-
-					self.worker1_search_WP_FLAG[2] = 1
-
+		# Yaw condition depending on if desired yaw is close to 3.14 or -3.14 which would cause issues when it gets close because sign changes
+		if abs(pi-abs(desired_yaw)) < 10*pi/180:
+			yaw_condition = abs(abs(self.current_yaw)-desired_yaw)<.3
 		else:
-			self.positionSp.header.frame_id = 'local_origin'
-			desired_yaw = pi
-			quaternion_yaw = quaternion_from_euler(0, 0, desired_yaw)
-			self.positionSp.pose.orientation = Quaternion(*quaternion_yaw)
+			yaw_condition = abs(self.current_yaw-desired_yaw)<.3
 
-			if abs(abs(self.current_yaw)-desired_yaw)<.1:
-				self.positionSp.pose.position.x = self.worker1_search_NEAR_x
-				self.positionSp.pose.position.y = self.worker1_search_LEFT_y			
-				self.positionSp.pose.position.z = self.worker1_search_z
+		if yaw_condition:
 
-				#----------THIS IS FOR SIMULATION PURPOSES ONLY TO SPOOF WORKER FOUND-------------------------#
-				###############################################################################################
-				# self.verifyPOI_flag = 1
-				# self.worker1_found_flag = 1
-				# self.worker1Sp.pose.position.x = self.current_local_x - 2
-				# self.worker1Sp.pose.position.y = self.current_local_y - 5
-				# self.worker1Sp.pose.position.z = 0
-				###############################################################################################
-				###############################################################################################
+			self.positionSp.pose.position.x = waypoint_x
+			self.positionSp.pose.position.y = waypoint_y
+			self.positionSp.pose.position.z = waypoint_z
 
-				if abs(self.current_local_x - self.worker1_search_NEAR_x)<= 1 and abs(self.current_local_y - self.worker1_search_LEFT_y) <= 1 and abs(self.current_local_z - self.worker1_search_z) <= 0.5:
-				
-					rospy.logwarn(':[ COULD NOT FIND MISSING WOKRER IN FIELD! TRYING AGAIN')
-					self.worker1_search_WP_FLAG = [0, 0, 0]
+			if abs(self.current_local_x - waypoint_x)<= 1 and abs(self.current_local_y - waypoint_y) <= 1 and abs(self.current_local_z - waypoint_z) <= 0.5:
+				rospy.loginfo("Current position close enough to desired waypoint")
+
+				#--------THIS IS SO I COULD GET THE GPS LOCATION AT THIS CORNER FROM THE LOG FILE---------#
+				###########################################################################################
+				self.current_signal = "Reached waypoint"
+				###########################################################################################
+
+				done = 1
+
+		return done
 
 	def BuildingScan(self):
 
@@ -874,63 +831,10 @@ class Controller:
 		# setWaypoints_and_Fence converts them to local x/y to give the four corner coordinates.
 
 
-		if self.building_scan_WPS_FLAG[0] == 0:
+		if self.building_scan_WP_FLAG == 2:
 
-			self.positionSp.header.frame_id = 'local_origin'
-			self.positionSp.pose.position.x = self.entrance_search_FRONT_x
-			self.positionSp.pose.position.y = self.entrance_search_LEFT_y
-			self.positionSp.pose.position.z = self.entrance_search_z
-
-			if abs(self.current_local_x - self.entrance_search_FRONT_x)<= 1 and abs(self.current_local_y - self.entrance_search_LEFT_y) <= 1 and abs(self.current_local_z - self.entrance_search_z) <= 0.5:
-				quaternion_yaw = quaternion_from_euler(0, 0, self.yaw_front_z)
-				self.positionSp.pose.orientation = Quaternion(*quaternion_yaw)
-				if abs(self.current_yaw-self.yaw_front_z) <= 0.2:
-					self.building_scan_WPS_FLAG[0] = 1
-			
-		elif self.building_scan_WPS_FLAG[1] == 0:
-
-			self.positionSp.header.frame_id = 'local_origin'
-			self.positionSp.pose.position.x = self.entrance_search_FRONT_x
-			self.positionSp.pose.position.y = self.entrance_search_RIGHT_y
-			self.positionSp.pose.position.z = self.entrance_search_z
-
-			rospy.loginfo("Searching front side of building for tags")
-
-			if abs(self.current_local_x - self.entrance_search_FRONT_x)<= 1 and abs(self.current_local_y - self.entrance_search_RIGHT_y) <= 1 and abs(self.current_local_z - self.entrance_search_z) <= 0.5:
-				quaternion_yaw = quaternion_from_euler(0, 0, self.yaw_right_z)
-				self.positionSp.pose.orientation = Quaternion(*quaternion_yaw)
-
-				#--------THIS IS SO I COULD GET THE GPS LOCATION AT THIS CORNER FROM THE LOG FILE---------#
-				###########################################################################################
-				self.current_signal = "Reached entrance search wapyoint NEAR/RIGHT"
-				###########################################################################################
-
-				if abs(self.current_yaw-self.yaw_right_z) <= 0.2:
-					self.building_scan_WPS_FLAG[1] = 1
-
-		elif self.building_scan_WPS_FLAG[2] == 0:
-
-			self.positionSp.header.frame_id = 'local_origin'
-			self.positionSp.pose.position.x = self.entrance_search_BACK_x
-			self.positionSp.pose.position.y = self.entrance_search_RIGHT_y
-			self.positionSp.pose.position.z = self.entrance_search_z
-
-			rospy.loginfo("Searching right side of building for tags")
-
-			if abs(self.current_local_x - self.entrance_search_BACK_x)<= 1 and abs(self.current_local_y - self.entrance_search_RIGHT_y) <= 1 and abs(self.current_local_z - self.entrance_search_z) <= 0.5:
-				quaternion_yaw = quaternion_from_euler(0, 0, self.yaw_back_z)
-				self.positionSp.pose.orientation = Quaternion(*quaternion_yaw)
-				if abs(self.current_yaw-self.yaw_back_z) <= 0.2:
-					self.building_scan_WPS_FLAG[2] = 1
-
-		elif self.building_scan_WPS_FLAG[3] == 0:
-
-			self.positionSp.header.frame_id = 'local_origin'
-			self.positionSp.pose.position.x = self.entrance_search_BACK_x
-			self.positionSp.pose.position.y = self.entrance_search_LEFT_y
-			self.positionSp.pose.position.z = self.entrance_search_z
-
-			rospy.loginfo("Searching back side of building for tags")
+			rospy.loginfo("Search top side of building (looking down on map) for tags")
+			reached_entrance_search_WP2 = self.Execute_Waypoint(self.entrance_search_corner2_x, self.entrance_search_corner2_y, self.entrance_search_z, self.yaw_top_z)
 
 			# -------------------------------FOR SIMULATION PURPOSES ONLY----------------------------------#
 			################################################################################################
@@ -940,24 +844,33 @@ class Controller:
 			# self.tag_info.y = self.building_center_y - 5
 			################################################################################################
 
-			if abs(self.current_local_x - self.entrance_search_BACK_x)<= 1 and abs(self.current_local_y - self.entrance_search_LEFT_y) <= 1 and abs(self.current_local_z - self.entrance_search_z) <= 0.5:
-				quaternion_yaw = quaternion_from_euler(0, 0, self.yaw_left_z)
-				self.positionSp.pose.orientation = Quaternion(*quaternion_yaw)
+			if reached_entrance_search_WP2:
+
+				self.building_scan_WP_FLAG = 3
 
 				#--------THIS IS SO I COULD GET THE GPS LOCATION AT THIS CORNER FROM THE LOG FILE---------#
 				###########################################################################################
-				self.current_signal = "Reached entrance search waypoint FAR/LEFT"
+				self.current_signal = "Reached entrance search waypoint TOP/LEFT"
+				###########################################################################################
+			
+		elif self.building_scan_WP_FLAG == 3:
+
+			rospy.loginfo("Search left side of building (looking down on map) for tags")
+			reached_entrance_search_WP3 = self.Execute_Waypoint(self.entrance_search_corner3_x, self.entrance_search_corner3_y, self.entrance_search_z, self.yaw_left_z)
+
+			if reached_entrance_search_WP3:
+
+				self.building_scan_WP_FLAG = 4
+
+				#--------THIS IS SO I COULD GET THE GPS LOCATION AT THIS CORNER FROM THE LOG FILE---------#
+				###########################################################################################
+				self.current_signal = "Reached entrance search waypoint BOTTOM/LEFT"
 				###########################################################################################
 
-				if abs(self.current_yaw-self.yaw_left_z) <= 0.2:
-					self.building_scan_WPS_FLAG[3] = 1
+		elif self.building_scan_WP_FLAG == 4:
 
-		elif self.building_scan_WPS_FLAG[4] == 0:
-
-			self.positionSp.header.frame_id = 'local_origin'
-			self.positionSp.pose.position.x = self.entrance_search_FRONT_x
-			self.positionSp.pose.position.y = self.entrance_search_LEFT_y
-			self.positionSp.pose.position.z = self.entrance_search_z
+			rospy.loginfo("Search bottom side of building (looking down on map) for tags")
+			reached_entrance_search_WP4 = self.Execute_Waypoint(self.entrance_search_corner4_x, self.entrance_search_corner4_y, self.entrance_search_z, self.yaw_bottom_z)
 
 			#-----------------------------------FOR SIMULATION PURPOSES ONLY------------------------------#
 			###############################################################################################
@@ -967,29 +880,53 @@ class Controller:
 			# self.tag_info.y = self.building_center_y - 5
 			###############################################################################################
 
-			rospy.loginfo("Searching left side of building for tags")
+			if reached_entrance_search_WP4:
 
-			if abs(self.current_local_x - self.entrance_search_FRONT_x)<= 1 and abs(self.current_local_y - self.entrance_search_LEFT_y) <= 1 and abs(self.current_local_z - self.entrance_search_z) <= 0.5:
+				self.building_scan_WP_FLAG = 1
 
-				self.building_scan_WPS_FLAG[4] = 1
+				#--------THIS IS SO I COULD GET THE GPS LOCATION AT THIS CORNER FROM THE LOG FILE---------#
+				###########################################################################################
+				self.current_signal = "Reached entrance search waypoint BOTTOM/RIGHT"
+				###########################################################################################
+
+		elif self.building_scan_WP_FLAG == 1:
+
+			rospy.loginfo("Search right side of building (looking down on map) for tags")
+			reached_entrance_search_WP1 = self.Execute_Waypoint(self.entrance_search_corner1_x, self.entrance_search_corner1_y, self.entrance_search_z, self.yaw_right_z)
+
+			if reached_entrance_search_WP1:
+
+				self.building_scan_WP_FLAG = 0 # END BUILDING SCAN
+
+				#--------THIS IS SO I COULD GET THE GPS LOCATION AT THIS CORNER FROM THE LOG FILE---------#
+				###########################################################################################
+				self.current_signal = "Reached entrance search waypoint TOP/RIGHT"
+				###########################################################################################
 
 		else:
 			rospy.loginfo('Completed full revolution')
 			rospy.loginfo('Number of red tags found:')
 			rospy.loginfo(self.red_tag.total_num)
 			self.completed_full_rev = 1
-			self.building_scan_WPS_FLAG = [0, 0, 0, 0, 0]
+			self.building_scan_WP_FLAG = 2
 
-	def EntranceSearch(self,entrance_x,entrance_y,entrance_view_angle):
+	def EntranceSearch(self,entrance_x,entrance_y,entrance_view_angle,on_same_side):
 		# This function executes if green tag was not found during BuildingScan, after a complete
 		# revolution. This code should make the drone go to about 10 meters, go to a known location
 		# of a possible entrance, and then go to 1.5 meters yawing so that it is facing the possible
 		# entrance.
 
 		entrance_search_counter = 0
+
+		if on_same_side:
+			building_avoidance_height = self.entrance_search_z
+		elif not on_same_side:
+			building_avoidance_height = 8
+
+
 		if (self.entrance_search_WPS_FLAG[0] == 0):
 			self.positionSp.header.frame_id = 'local_origin'
-			self.positionSp.pose.position.z = 8
+			self.positionSp.pose.position.z = building_avoidance_height
 
 			if abs(self.current_local_z-self.positionSp.pose.position.z)<0.5:
 				self.positionSp.header.frame_id = 'local_origin'
@@ -1013,11 +950,6 @@ class Controller:
 			if abs(self.current_local_z-self.entrance_search_z)<.1 and abs(self.current_yaw-entrance_view_angle) < 0.2:
 				rospy.loginfo('Checking entrance to see what the color of the tag is')
 
-				#-------THIS IS SO I COULD GET THE GPS LOCATION AT THIS Location FROM THE LOG FILE--------#
-				###########################################################################################
-				self.current_signal = "Checking possible unblocked entrance"
-				###########################################################################################
-
 				while entrance_search_counter < 80:
 
 					#----------THIS IS SO I COULD GET THE GPS LOCATION AT THIS CORNER FROM THE LOG FILE-------------#
@@ -1031,6 +963,11 @@ class Controller:
 
 					self.verifyTag()
 					entrance_search_counter = entrance_search_counter + 1
+
+				#-------THIS IS SO I COULD GET THE GPS LOCATION AT THIS Location FROM THE LOG FILE--------#
+				###########################################################################################
+				self.current_signal = "Checking possible unblocked entrance"
+				###########################################################################################
 
 				self.entrance_search_WPS_FLAG[2] = 1
 		else:
@@ -1149,8 +1086,6 @@ def main():
 	rospy.Subscriber("/detected_object_3d_pos", PoseStamped, K.WorkerPoseCb)
 
 
-
-
 	#------------------------------- THESE TOPICS STILL NEED TO BE DEFINED (or figured out) -------------------------------------#
 	##############################################################################################################################
 	#Subscriber: tag_localization setpoints
@@ -1164,8 +1099,6 @@ def main():
 	##############################################################################################################################
 
 	
-
-
 	########## Publishers ##########
 
 	# Publisher: PositionTarget
@@ -1275,12 +1208,10 @@ def main():
 			K.current_state = 'WAYPOINT1'
 			K.current_signal = 'Running'
 			rospy.loginfo("Heading to WP1")
-			K.positionSp.header.frame_id = 'local_origin'
-			K.positionSp.pose.position.x = K.waypoint1_x
-			K.positionSp.pose.position.y = K.waypoint1_y
-			K.positionSp.pose.position.z = K.waypoint1_z
 
-			if abs(K.current_local_x - K.waypoint1_x)<= 1 and abs(K.current_local_y - K.waypoint1_y) <= 1 and abs(K.current_local_z - K.waypoint1_z) <= 0.5:   # Rules give a 3m radius from goal
+			waypoint1_is_done = K.Execute_Waypoint(K.waypoint1_x, K.waypoint1_y, K.waypoint1_z, -1000)
+
+			if waypoint1_is_done:
 				rospy.loginfo("Current position close enough to desired waypoint")
 				rospy.loginfo("Reached waypoint 1")
 				K.resetStates()
@@ -1291,12 +1222,10 @@ def main():
 			K.current_state = 'WAYPOINT2'
 			K.current_signal = 'Running'
 			rospy.loginfo("Heading to WP2")
-			K.positionSp.header.frame_id = 'local_origin'
-			K.positionSp.pose.position.x = K.waypoint2_x
-			K.positionSp.pose.position.y = K.waypoint2_y
-			K.positionSp.pose.position.z = K.waypoint2_z
 
-			if abs(K.current_local_x - K.waypoint2_x)<= 1 and abs(K.current_local_y - K.waypoint2_y) <= 1 and abs(K.current_local_z - K.waypoint2_z) <= 0.5:   # Rules give a 3m radius from goal
+			waypoint2_is_done = K.Execute_Waypoint(K.waypoint2_x, K.waypoint2_y, K.waypoint2_z, -1000)
+
+			if waypoint2_is_done:
 				rospy.loginfo("Current position close enough to desired waypoint")
 				rospy.loginfo("Reached waypoint 2")
 				K.resetStates()
@@ -1307,35 +1236,39 @@ def main():
 			K.current_state = 'WAYPOINT3'
 			K.current_signal = 'Running'
 			rospy.loginfo("Heading to WP3")
-			K.positionSp.header.frame_id = 'local_origin'
-			K.positionSp.pose.position.x = K.waypoint3_x
-			K.positionSp.pose.position.y = K.waypoint3_y
-			K.positionSp.pose.position.z = K.waypoint3_z
 
-			if abs(K.current_local_x - K.waypoint3_x)<= 1 and abs(K.current_local_y - K.waypoint3_y) <= 1 and abs(K.current_local_z - K.waypoint3_z) <= 0.5:   # Rules give a 3m radius from goal
-				rospy.loginfo('Current position close enough to desired waypoint')
-				rospy.loginfo('Reached waypoint 3')
+			waypoint3_is_done = K.Execute_Waypoint(K.waypoint3_x, K.waypoint3_y, K.waypoint3_z, -1000)
+
+			if waypoint3_is_done:
+				rospy.loginfo("Current position close enough to desired waypoint")
+				rospy.loginfo("Reached waypoint 3")
 				K.resetStates()
-				K.WWAYPOINT4 = 1
+				K.WAYPOINT4 = 1
 				K.current_signal = 'Reached WP3'
 
 		elif K.WAYPOINT4:
 			K.current_state = 'WAYPOINT4'
 			K.current_signal = 'Running'
 			rospy.loginfo("Heading to WP4")
-			K.positionSp.header.frame_id = 'local_origin'
-			K.positionSp.pose.position.x = K.waypoint4_x
-			K.positionSp.pose.position.y = K.waypoint4_y
-			K.positionSp.pose.position.z = K.waypoint4_z
 
-			if abs(K.current_local_x - K.waypoint4_x)<= 1 and abs(K.current_local_y - K.waypoint4_y) <= 1 and abs(K.current_local_z - K.waypoint4_z) <= 0.5:   # Rules give a 3m radius from goal
-				rospy.loginfo('Current position close enough to desired waypoint')
-				rospy.loginfo('Reached waypoint 4')
+			waypoint4_is_done = K.Execute_Waypoint(K.waypoint4_x, K.waypoint4_y, K.waypoint4_z, -1000)
+
+			if waypoint4_is_done:
+				rospy.loginfo("Current position close enough to desired waypoint")
+				rospy.loginfo("Reached waypoint 4")
+				K.positionSp.header.frame_id = "local_origin"
+				K.positionSp.pose.position.z = K.worker1_search_z
 				K.resetStates()
 				K.WORKER1SEARCH = 1
 				K.current_signal = 'Reached WP4'
 
 		elif K.WORKER1SEARCH:
+			# Search algorithm is as follows: Drone follows a square pattern starting at the 
+			# closest right corner, goes down field on right side, turn left at the end of 
+			# the field, and comes back on left side. The search path side closest to the 
+			# control station is basically at the same distance downfield as the building. 
+			# Since the field is 30 meters wide, in order to span the entire field, the drone
+			# should search at about 8 meters high and 7.5 meters inward from the field boundaries.
 			K.current_state = 'WORKER1SEARCH'
 			K.current_signal = 'Running'
 			K.verifyPOI()
@@ -1353,7 +1286,66 @@ def main():
 
 			else:
 				# EXECUTE WORKER SEARCH WAYPOINTS. IF CAN'T FIND ANYTHING, DO IT OVER AGAIN
-				K.Worker1SearchPattern()
+
+				# First make sure that drone is high enough so that it won't run into the building
+				if K.worker1_search_WP_FLAG == 0:
+					K.positionSp.pose.position.z = K.worker1_search_z
+					if abs(K.current_local_z-K.worker1_search_z) < 0.5:
+						K.worker1_search_WP_FLAG = 1
+
+				if K.worker1_search_WP_FLAG == 1:
+					waypoint1_is_done = K.Execute_Waypoint(K.worker1_search_WP1_x, K.worker1_search_WP1_y, K.worker1_search_z, -1000)
+
+					if waypoint1_is_done:
+						rospy.loginfo("Current position close enough to worker search WP1.\nHeading to worker search WP2")
+						K.worker1_search_WP_FLAG = 2
+
+						#---- For finding GPS location of this point -- Simulation only
+						K.current_signal = 'Reached worker search waypoint 1'
+						###############################################################
+
+				if K.worker1_search_WP_FLAG == 2:
+					waypoint2_is_done = K.Execute_Waypoint(K.worker1_search_WP2_x, K.worker1_search_WP2_y, K.worker1_search_z, -1000)
+
+					if waypoint2_is_done:
+						rospy.loginfo("Current position close enough to worker search WP2.\nHeading to worker search WP3")
+						K.worker1_search_WP_FLAG = 3 
+
+						#---- For finding GPS location of this point -- Simulation only
+						K.current_signal = 'Reached worker search waypoint 2'
+						###############################################################
+
+				if K.worker1_search_WP_FLAG == 3:
+					waypoint3_is_done = K.Execute_Waypoint(K.worker1_search_WP3_x, K.worker1_search_WP3_y, K.worker1_search_z, -1000)
+
+					if waypoint3_is_done:
+						rospy.loginfo("Current position close enough to worker search WP3.\nHeading to worker search WP4")
+						K.worker1_search_WP_FLAG = 4 
+
+						#---- For finding GPS location of this point -- Simulation only
+						K.current_signal = 'Reached worker search waypoint 3'
+						###############################################################
+
+				if K.worker1_search_WP_FLAG == 4:
+					waypoint4_is_done = K.Execute_Waypoint(K.worker1_search_WP4_x, K.worker1_search_WP4_y, K.worker1_search_z, -1000)
+
+					if waypoint4_is_done:
+						rospy.loginfo("Current position close enough to worker search WP4.\nHeading to worker search WP1")
+						K.worker1_search_WP_FLAG = 0 
+						rospy.logwarn("Could not find worker. Starting over again")
+
+						#---- For finding GPS location of this point -- Simulation only
+						K.current_signal = 'Reached worker search waypoint 4'
+						###############################################################
+
+						#----------THIS IS FOR SIMULATION PURPOSES ONLY TO SPOOF WORKER FOUND-------------------------#
+						###############################################################################################
+						K.verifyPOI_flag = 1
+						K.worker1_found_flag = 1
+						K.worker1Sp.pose.position.x = K.current_local_x + 2
+						K.worker1Sp.pose.position.y = K.current_local_y + 5
+						K.worker1Sp.pose.position.z = 0
+						###############################################################################################
 
 		elif K.DELIVERAID1:
 			K.current_state = 'DELIVERAID1'
@@ -1420,7 +1412,7 @@ def main():
 			K.positionSp.pose.position.z = K.entrance_search_z # Should be 1
 			K.positionSp.pose.orientation.w = 1.0	# IS THIS NEEDED?
 
-			quaternion_yaw = quaternion_from_euler(0, 0, K.yaw_front_z)
+			quaternion_yaw = quaternion_from_euler(0, 0, K.yaw_top_z)
 			K.positionSp.pose.orientation = Quaternion(*quaternion_yaw)
 
 			if abs(K.current_local_z - K.entrance_search_z) < .3:
@@ -1433,22 +1425,13 @@ def main():
 			K.current_state = 'GOTOBUILDING'
 			K.current_signal = 'Running'
 			rospy.loginfo('Headed to building for entrance search')
-			K.positionSp.header.frame_id = 'local_origin'
-			K.positionSp.pose.position.x = K.entrance_search_FRONT_x
-			K.positionSp.pose.position.y = K.entrance_search_LEFT_y
-			K.positionSp.pose.position.z = K.entrance_search_z
 
-			if abs(K.current_local_x - K.entrance_search_FRONT_x) <= 1 and abs(K.current_local_y - K.entrance_search_LEFT_y) <= 1:
+			reached_building = K.Execute_Waypoint(K.entrance_search_corner1_x, K.entrance_search_corner1_y, K.entrance_search_z, -1000)
 
-				K.positionSp.pose.position.z = K.entrance_search_z
-				quaternion_yaw = quaternion_from_euler(0, 0, K.yaw_front_z)
-				K.positionSp.pose.orientation = Quaternion(*quaternion_yaw)
-
-				if abs(K.current_local_z-K.entrance_search_z) < 0.5 and abs(K.current_yaw-K.yaw_front_z) <= 0.2:
-
-					K.resetStates()
-					K.ENTRANCESEARCH = 1
-					K.current_signal = 'Reached Building'
+			if reached_building:
+				K.current_signal = 'Reached Building'
+				K.resetStates()
+				K.ENTRANCESEARCH = 1
 
 		elif K.ENTRANCESEARCH:
 			K.current_state = 'ENTRANCESEARCH'
@@ -1475,17 +1458,29 @@ def main():
 
 			elif (K.green_tag.found == 0) and (K.completed_full_rev == 1):
 				if K.entrance_number_search == 1:	# This variable is set in the EntranceSearch code
-					K.EntranceSearch(K.building_entr1_x,K.building_entr1_y,K.yaw_building_entr1)
+					K.EntranceSearch(K.building_entr1_x,K.building_entr1_y,K.yaw_building_entr1,False)
 					rospy.loginfo('Checking first entrance')
 					K.current_signal = 'Searching first entrance'
 				elif K.entrance_number_search == 2:
-					K.EntranceSearch(K.building_entr2_x,K.building_entr2_y,K.yaw_building_entr2)
+					K.EntranceSearch(K.building_entr2_x,K.building_entr2_y,K.yaw_building_entr2,True)
 					rospy.loginfo('Checking second entrance')
 					K.current_signal = 'Searching second entrance'
 				elif K.entrance_number_search == 3:
 					rospy.loginfo('Checking third entrance')
 					K.current_signal = 'Searching third entrance'
-					K.EntranceSearch(K.building_entr3_x,K.building_entr3_y,K.yaw_building_entr3)
+					K.EntranceSearch(K.building_entr3_x,K.building_entr3_y,K.yaw_building_entr3,True)
+				elif K.entrance_number_search == 4:	# This variable is set in the EntranceSearch code
+					K.EntranceSearch(K.building_entr4_x,K.building_entr4_y,K.yaw_building_entr4,False)
+					rospy.loginfo('Checking first entrance')
+					K.current_signal = 'Searching fourth entrance'
+				elif K.entrance_number_search == 5:
+					K.EntranceSearch(K.building_entr5_x,K.building_entr5_y,K.yaw_building_entr5,True)
+					rospy.loginfo('Checking second entrance')
+					K.current_signal = 'Searching fifth entrance'
+				elif K.entrance_number_search == 6:
+					rospy.loginfo('Checking third entrance')
+					K.current_signal = 'Searching sixth entrance'
+					K.EntranceSearch(K.building_entr6_x,K.building_entr6_y,K.yaw_building_entr6,True)
 				else:
 					K.entrance_number_search = 1 # So that vehicle will check first entrance again
 					rospy.loginfo('Still cannot find unblocked entrance. Try again at first entrance')
@@ -1597,11 +1592,11 @@ def main():
 			rospy.loginfo('Mission Complete - Vehicle heading back to home')
 			# K.modes.setReturnToHome() # Not sure if this works. It didn't work in simulation
 			K.positionSp.header.frame_id = 'local_origin'
-			K.positionSp.pose.position.x = K.home_x
-			K.positionSp.pose.position.y = K.home_y
+			K.positionSp.pose.position.x = K.landing_zone_x
+			K.positionSp.pose.position.y = K.landing_zone_y
 			K.positionSp.pose.position.z = K.takeoff_height
 
-			if abs(K.current_local_x - K.home_x)<= 1 and abs(K.current_local_y - K.home_y) <= 1:   # Rules give a 3m radius from goal
+			if abs(K.current_local_x - K.landing_zone_x)<= 1 and abs(K.current_local_y - K.landing_zone_y) <= 1:   # Rules give a 3m radius from goal
 				rospy.loginfo('Reached home')
 				K.current_signal = 'Reached Home'
 				K.resetStates()

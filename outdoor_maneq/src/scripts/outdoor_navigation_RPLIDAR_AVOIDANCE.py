@@ -715,7 +715,7 @@ def main():
 				servo_pub.publish(K.n)
 				rospy.sleep(0.1)
 		K.gripper_flag = False
-
+ 
 		############ Check if vehicle is currently in warning area first #############
 		if (K.isTooCloseToFence()== True):
 				rospy.logwarn('Changing to Hover mode because vehicle was too close to boundary')
@@ -776,8 +776,6 @@ def main():
 				tempz = K.current_local_z - K.waypoint1_z
 				rospy.loginfo('Current_z - Waypoint1_z')
 				rospy.loginfo(tempz)
-
-				K.avoidancepar =1
              
 				if abs(K.current_local_x - K.waypoint1_x)<= 1 and abs(K.current_local_y - K.waypoint1_y) <= 1 and abs(K.current_local_z - K.waypoint1_z) <= 0.5:   # Rules give a 3m radius from goal
 					rospy.loginfo("Current position close enough to desired waypoint")
@@ -804,7 +802,6 @@ def main():
 					rospy.loginfo("Reached waypoint 2")
 					K.resetStates()
 					K.WAYPOINT3 = 1
-				K.avoidancepar = 1
 
 		if K.WAYPOINT3:
 			angle = math.atan2((K.waypoint2_y-K.current_local_y),(K.waypoint2_x-K.current_local_x))
@@ -824,7 +821,6 @@ def main():
 					rospy.loginfo('Reached waypoint 3')
 					K.resetStates()
 					K.WORKER1SEARCH = 1
-				K.avoidancepar =1
 
 		if K.WORKER1SEARCH:
 			rospy.loginfo('Vehicle searching for missing worker outside') 
