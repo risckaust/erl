@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+ <!-- run object_localization_node.py from object_localization_package -->
+ <node pkg="object_localization" type="object_localization_node_person.py" name="object_localization_person"  output="screen"/>
+ <node pkg="object_localization" type="object_localization_node_tags.py" name="object_localization_tags"  output="screen"/>
+</launch>

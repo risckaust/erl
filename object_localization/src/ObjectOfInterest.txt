@@ -1,0 +1,14 @@
+
+Time Stamp (sec)
+1.0
+Target ID:
+Outside Worker
+Target Position (Lat, Lon)
+(22.221313, 39.091118)
+
+Time Stamp (sec)
+1.0
+Target ID:
+Outside Worker
+Target Position (Lat, Lon)
+(22.221313, 39.091118)

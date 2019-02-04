@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+	<!-- GRIPPER SERIAL COMMUNICATION -->
+	<!--node pkg="rosserial_python" type="serial_node.py" name="serial_node">
+		<param name="_port" value="/dev/ttyUSB0"/>
+	</node-->
+
+	<!-- MAVROS -->
+	<arg name="mavros_transformation" default="0" />
+	<node pkg="tf" type="static_transform_publisher" name="tf_90_deg"
+	  args="0 0 0 $(arg mavros_transformation) 0 0 world local_origin 10"/>
+	<arg name="ns" default="/"/>
+	<arg name="fcu_url" default="/dev/ttyUSB0:921600"/>
+	<arg name="gcs_url" default="" /> 
+	<arg name="tgt_system" default="1" />
+	<arg name="tgt_component" default="1" />
+	<group ns="$(arg ns)">
+	<include file="$(find mavros)/launch/node.launch">
+	    <arg name="pluginlists_yaml" value="$(find mavros)/launch/px4_pluginlists.yaml" />
+	    <arg name="config_yaml" value="$(find object_localization)/resource/px4_config.yaml" />
+	    <arg name="fcu_url" value="$(arg fcu_url)" />
+	    <arg name="gcs_url" value="$(arg gcs_url)" />
+	    <arg name="tgt_system" value="$(arg tgt_system)" />
+	    <arg name="tgt_component" value="$(arg tgt_component)" />
+	</include>
+	</group>
+
+
+	<!--OBJECT LOCALIZATION-->
+	<include file="$(find object_localization)/launch/object_localization.launch"/>
+	
+	<!-- RS CAMERA -->
+	<node pkg="tf" type="static_transform_publisher" name="fcu_to_down_rs_map_frame" args="0.25 0 -0.05 0 1.57 0 fcu down_link 10" />
+	<node pkg="tf" type="static_transform_publisher" name="fcu_to_front_rs_map_frame" args="0.25 0 -0.05 0 0 0 fcu front_link 10" />
+	<include file="$(find realsense2_camera)/launch/rs_multiple_devices.launch"/>
+    
+	<!-- DARKNET -->
+	<include ns="person" file="$(find yolo_ros_vino)/launch/person_yolo_ros_vino.launch"/>
+	<include ns="tags" file="$(find yolo_ros_vino)/launch/tags_yolo_ros_vino.launch"/>
+
+	<!-- Launch rplidar -->
+  	<!-- <include file="$(find rplidar_ros)/launch/rplidar.launch"/>  -->
+
+	<!-- State Machine + Avoidance -->
+	<!--node pkg="object_localization" type="finalv4_with_avoidance_and_indoor.py" name="statemachine_w_avoidance" output="screen"/-->
+
+</launch>
+
