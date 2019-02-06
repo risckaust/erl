@@ -1,0 +1,14 @@
+<launch>
+
+    	<include file="$(find rtabmap_ros)/launch/rtabmap.launch" >
+    	<arg name="rtabmap_args" value="--delete_db_on_start" />
+    	<arg name="depth_topic" value= "/camera/aligned_depth_to_color/image_raw" />
+	<arg name="rgb_topic" value= "/camera/color/image_raw" />
+	<arg name="camera_info_topic" value= "/camera/color/camera_info" />
+   	<arg name="approx_sync" value="false" />
+	<arg name="rtabmapviz" value="true" />
+    	<arg name="database_path" value="~/Documents/RTAB-Map/1.db"/> >
+	</include>  
+
+
+</launch>

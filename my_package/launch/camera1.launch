@@ -1,0 +1,14 @@
+
+<launch>
+   
+  <!-- Camera 2 -->
+   
+ 
+  <include file="$(find realsense2_camera)/launch/rs_rgbd.launch">
+    <arg name="align_depth" value="True" />						
+    <arg name="camera" value="camera1" />
+    <arg name="serial_no"   value="805312070394"/> 					<!-- Added serial # here --> 
+  </include>
+
+ 
+</launch>

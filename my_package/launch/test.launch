@@ -1,0 +1,156 @@
+<launch>
+
+    <!-- RTABMAP MAPPING launch node -->
+
+    <arg name="rgb_topic"                               default="/camera/color/image_rect_color" />
+
+    <arg name="depth_topic"                             default="/camera/depth/image_rect_raw" />
+
+    <arg name="camera_info_topic"                       default="/camera/color/camera_info" />
+
+    <arg name="frame_id"                                default="fcu"/>
+
+    <arg name="odom_frame_id"                           default="local_origin"/>
+
+    <arg name="map_frame_id"                            default="world"/>
+
+    <arg name="subscribe_depth"                         default="true"/>
+
+    <arg name="subscribe_rgbd"                          default="false"/>
+
+    <arg name="subscribe_scan"                          default="false"/>
+
+    <arg name="scan_topic"                              default="/scan"/>
+
+    <arg name="subscribe_scan_cloud"                    default="false"/>
+
+    <arg name="scan_cloud_topic"                        default="/scan_cloud"/>
+
+    <arg name="odom_topic"                              default="/mavros/local_position/odom"/>
+
+    <arg name="database_path"                           default="~/Documents/RTAB-Map/1.db"/>
+
+    <arg name="rtabmap_args"                            default="--delete_db_on_start"/> <!-- was delete_db_on_start -->
+
+    <arg name="launch_prefix"                           default=""/> 
+
+    <arg name="approx_sync"                             default="true"/> <!-- if timestamps of the input topics are not synchronized -->
+
+    <arg name="namespace"                               default="rtabmap"/>
+
+    <arg name="wait_for_transform"                      default="0.2"/>
+
+    <node pkg="tf" type="static_transform_publisher"    name="tf_depth_camera"     args="0 0 0 0 0 0 fcu camera_link 10"/>
+
+    <node pkg="tf" type="static_transform_publisher"    name="tf_90_deg"           args="0 0 0 0 0 0 world local_origin 10"/>
+   
+    <group ns="rtabmap">
+
+        <node name="rtabmap" pkg="rtabmap_ros" type="rtabmap" output="screen" args="$(arg rtabmap_args)" launch-prefix="$(arg launch_prefix)">
+
+            <param name="database_path"                 type="string"   value="$(arg database_path)"/>
+
+            <param name="subscribe_depth"               type="bool"     value="$(arg subscribe_depth)"/>
+
+            <param name="subscribe_rgbd"                type="bool"     value="$(arg subscribe_rgbd)"/>
+
+            <param name="subscribe_scan"                type="bool"     value="$(arg subscribe_scan)"/>
+
+            <param name="subscribe_scan_cloud"          type="bool"     value="$(arg subscribe_scan_cloud)"/>
+
+            <param name="frame_id"                      type="string"   value="$(arg frame_id)"/>
+
+            <param name="odom_frame_id"                 type="string"   value="$(arg odom_frame_id)"/>
+
+            <param name="map_frame_id"                  type="string"   value="$(arg map_frame_id)"/>
+
+            <param name="odom_tf_linear_variance"                       value="0.001"/>
+
+            <param name="odom_tf_angular_variance"                      value="0.001"/>
+
+            <param name="wait_for_transform_duration"   type="double"   value="$(arg wait_for_transform)"/>
+
+            <param name="approx_sync"                   type="bool"     value="$(arg approx_sync)"/>
+
+            <remap from="odom"                          to="$(arg odom_topic)"/>
+
+            <remap from="rgb/image"                     to="$(arg rgb_topic)"/>
+
+            <remap from="depth/image"                   to="$(arg depth_topic)"/>
+
+            <remap from="rgb/camera_info"               to="$(arg camera_info_topic)"/>
+
+            <remap from="scan"                          to="$(arg scan_topic)"/>
+
+            <remap from="scan_cloud"                    to="$(arg scan_cloud_topic)"/>
+
+            <param name="queue_size"                    type="int"      value="10"/>
+
+            <param name="RGBD/NeighborLinkRefining"     type="string"   value="false"/> 
+
+            <param name="RGBD/ProximityBySpace"         type="string"   value="false"/> <!-- Referred paper did only global loop closure detection -->
+
+            <!--param name="RGBD/ProximityBySpace"     type="string" value="true"/--> <!-- Local loop closure detection (using estimated position) with locations in WM -->
+
+            <param name="RGBD/ProximityPathMaxNeighbors" type="string"  value="0"/>
+
+            <param name="RGBD/ProximityByTime"          type="string"   value="false"/> 
+
+            <param name="RGBD/OptimizeMaxError"         type="string"   value="0.25"/>
+
+            <param name="RGBD/OptimizeFromGraphEnd"     type="string"   value="true"/>
+
+            <!--param name="RGBD/OptimizeFromGraphEnd" type="string" value="false"/-->   <!-- Set to false to generate map correction between /map and /odom -->
+
+            <param name="RGBD/AngularUpdate"            type="string"   value="0.01"/>
+
+            <param name="RGBD/LinearUpdate"             type="string"   value="0.01"/>
+
+            <param name="Reg/Strategy"                  type="string"   value="0"/>      <!-- Loop closure transformation: 0=Visual, 1=ICP, 2=Visual+ICP -->
+
+            <param name="Reg/Force3DoF"                 type="string"   value="true"/>
+
+            <param name="Vis/MinInliers"                type="string"   value="15"/>      <!-- 3D visual words minimum inliers to accept loop closure -->
+
+            <param name="Vis/MaxDepth"                  type="string"   value="7"/>
+
+            <param name="Vis/InlierDistance"           type="string"   value="0.1"/>     <!-- 3D visual words correspondence distance -->
+
+            <param name="Kp/TfIdfLikelihoodUsed"        type="string"   value="false"/>
+
+            <param name="Kp/DetectorStrategy"           type="string"   value="0"/>      <!-- use SURF -->
+
+            <param name="Kp/MaxFeatures"                type="string"   value="400"/>
+
+            <param name="Kp/MaxDepth"                  type="string"   value="10"/>
+
+            <param name="Kp/IncrementalFlann"           type="string"   value="false"/>  <!-- Referred paper didn't use incremental FLANN -->
+
+            <param name="Optimizer/Strategy"            type="string"   value="0"/>      <!-- TORO is the most stable for multi-session mapping -->
+
+            <param name="Optimizer/Iterations"          type="string"   value="100"/> 
+
+            <param name="Rtabmap/TimeThr"               type="string"   value="700"/>
+
+            <param name="Mem/RehearsalSimilarity"       type="string"   value="0.45"/>
+
+            <param name="Bayes/FullPredictionUpdate"    type="string"   value="true"/>
+
+            <param name="Grid/DepthDecimation"         type="string"   value="4"/>
+
+            <param name="Grid/FromDepth"                type="string"   value="true"/> <!-- Create 2D occupancy grid from laser scan -->
+
+            <param name="Grid/GroundIsObstacle"         type="string"   value="false"/>
+
+            <param name="Grid/RangeMax"                 type="string"   value="5"/>
+
+            <param name="Mem/IncrementalMemory"         type="string"   value="true"/>
+
+            <param name="Mem/UseOdomFeatures"           type="string"   value="false"/>
+           
+
+        </node>
+
+    </group>
+
+</launch>
