@@ -12,7 +12,7 @@
         <param name="model_labels"          value="$(find yolo_ros_vino)/models/FP32/yolov3_tiny_tags.labels"/-->
 
         <param name="neural_compute_stick"  value="false"/>
-        <param name="camera_topic"          value="/down/color/image_raw"/>
+        <param name="camera_topic"          value="/down/camera/color/image_raw"/>
         <param name="view_result"           value="false"/>
     </node>
 </launch>
