@@ -42,7 +42,7 @@
   	<!-- <include file="$(find rplidar_ros)/launch/rplidar.launch"/>  -->
 
 	<!-- State Machine + Avoidance -->
-	<!--node pkg="object_localization" type="finalv4_with_avoidance_and_indoor.py" name="statemachine_w_avoidance" output="screen"/-->
+	<node pkg="object_localization" type="laststatemachinewithindoor.py" name="statemachine_w_avoidance" output="screen" />
 
 </launch>
 
