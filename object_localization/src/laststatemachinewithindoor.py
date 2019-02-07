@@ -1471,7 +1471,7 @@ class Controller:
 					self.target_yaw = math.atan2((self.positionSp.pose.position.y-self.current_local_y),(self.positionSp.pose.position.x-self.current_local_x))
 					quaternion = quaternion_from_euler(0, 0, self.target_yaw)
 					self.positionSp.pose.orientation = Quaternion(*quaternion)  
-					if abs(self.current_local_x-self.building_entr1_inside_x) <.3 and abs(self.current_local_y-self.building_entr1_inside_y):
+					if abs(self.current_local_x-self.building_entr1_inside_x) <.3 and abs(self.current_local_y-self.building_entr1_inside_y)<.3:
 						self.enter_bldg_flag=2 
 
 				elif self.unblocked_entrance == 2:
@@ -1481,7 +1481,7 @@ class Controller:
 					self.target_yaw = math.atan2((self.positionSp.pose.position.y-self.current_local_y),(self.positionSp.pose.position.x-self.current_local_x))
 					quaternion = quaternion_from_euler(0, 0, self.target_yaw)
 					self.positionSp.pose.orientation = Quaternion(*quaternion)  
-					if abs(self.current_local_x-self.building_entr2_inside_x) <.3 and abs(self.current_local_y-self.building_entr2_inside_y):
+					if abs(self.current_local_x-self.building_entr2_inside_x) <.3 and abs(self.current_local_y-self.building_entr2_inside_y)<.3:
 						self.enter_bldg_flag=2 
 									 
 
@@ -1492,7 +1492,7 @@ class Controller:
 					self.target_yaw = math.atan2((self.positionSp.pose.position.y-self.current_local_y),(self.positionSp.pose.position.x-self.current_local_x))
 					quaternion = quaternion_from_euler(0, 0, self.target_yaw)
 					self.positionSp.pose.orientation = Quaternion(*quaternion)  
-					if abs(self.current_local_x-self.building_entr3_inside_x) <.3 and abs(self.current_local_y-self.building_entr3_inside_y):
+					if abs(self.current_local_x-self.building_entr3_inside_x) <.3 and abs(self.current_local_y-self.building_entr3_inside_y)<.3:
 						self.enter_bldg_flag=2
 
 			if (self.exit_bldg_flag == 1):
@@ -1504,7 +1504,7 @@ class Controller:
 					self.target_yaw = math.atan2((self.positionSp.pose.position.y-self.current_local_y),(self.positionSp.pose.position.x-self.current_local_x))
 					quaternion = quaternion_from_euler(0, 0, self.target_yaw)
 					self.positionSp.pose.orientation = Quaternion(*quaternion)  
-					if abs(self.current_local_x-self.building_entr1_x) <.3 and abs(self.current_local_y-self.building_entr1_y):
+					if abs(self.current_local_x-self.building_entr1_x) <.3 and abs(self.current_local_y-self.building_entr1_y)<.3:
 						self.enter_bldg_flag=2 
 
 				elif self.unblocked_entrance == 2:
@@ -1514,7 +1514,7 @@ class Controller:
 					self.target_yaw = math.atan2((self.positionSp.pose.position.y-self.current_local_y),(self.positionSp.pose.position.x-self.current_local_x))
 					quaternion = quaternion_from_euler(0, 0, self.target_yaw)
 					self.positionSp.pose.orientation = Quaternion(*quaternion)  
-					if abs(self.current_local_x-self.building_entr2_x) <.3 and abs(self.current_local_y-self.building_entr2_y):
+					if abs(self.current_local_x-self.building_entr2_x) <.3 and abs(self.current_local_y-self.building_entr2_y)<.3:
 						self.enter_bldg_flag=2 
 									 
 
@@ -1525,7 +1525,7 @@ class Controller:
 					self.target_yaw = math.atan2((self.positionSp.pose.position.y-self.current_local_y),(self.positionSp.pose.position.x-self.current_local_x))
 					quaternion = quaternion_from_euler(0, 0, self.target_yaw)
 					self.positionSp.pose.orientation = Quaternion(*quaternion)  
-					if abs(self.current_local_x-self.building_entr3_x) <.3 and abs(self.current_local_y-self.building_entr3_y):
+					if abs(self.current_local_x-self.building_entr3_x) <.3 and abs(self.current_local_y-self.building_entr3_y)<.3:
 						self.enter_bldg_flag=2
 
 
