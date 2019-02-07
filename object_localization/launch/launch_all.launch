@@ -38,7 +38,7 @@
 	<include ns="person" file="$(find yolo_ros_vino)/launch/person_yolo_ros_vino.launch" />
 	<include ns="tags" file="$(find yolo_ros_vino)/launch/tags_yolo_ros_vino.launch" />
 
-	<!-- Launch rplidar [CHANGE /dev/ttyUSBx parameter to /dev/rplidar inside the rplidar package] -->
+	<!-- Launch RPLidar [Change "/dev/ttyUSBx" parameter to "/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0" inside the rplidar package] -->
   	<include file="$(find rplidar_ros)/launch/rplidar.launch" />
 
 	<!--State Machine + Avoidance -->
