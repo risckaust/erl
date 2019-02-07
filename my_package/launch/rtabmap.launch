@@ -261,14 +261,14 @@
       <param name="scan_normal_k"        type="int" value="$(arg scan_normal_k)"/>
 
       <param name="Rtabmap/StartNewMapOnLoopClosure" value="false"/>
-      <param name="rgbd/bilateral"  value="true"/> 
-      <param name="rgbd/bilateral_sigma_r" value="0.4"/>
-      <param name="rgbd/bilateral_sigma_s" value="10"/>
-      <param name="Map/ImageDecimation" value="1"/>
+      <!--param name="rgbd/bilateral"  value="true"/--> 
+      <!--param name="rgbd/bilateral_sigma_r" value="0.4"/-->
+      <!--param name="rgbd/bilateral_sigma_s" value="10"/-->
+      <!--param name="Map/ImageDecimation" value="1"/-->
 
 
-      <param name="Vis/MinInliers"                type="string"   value="10"/>      <!-- 3D visual words minimum inliers to accept loop closure -->
-      <param name="Vis/MaxDepth"                  type="string"   value="2"/>    
+      <!--param name="Vis/MinInliers"                type="string"   value="10"/-->      <!-- 3D visual words minimum inliers to accept loop closure -->
+      <!--param name="Vis/MaxDepth"                  type="string"   value="2"/-->    
 
 
       <remap from="rgb/image"       to="$(arg rgb_topic_relay)"/>
