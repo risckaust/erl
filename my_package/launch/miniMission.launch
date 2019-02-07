@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+
+<launch>
+
+    <include file="$(find my_package)/launch/rtabmap.launch" >
+    
+    <arg name="rtabmap_args" value="--delete_db_on_start" />
+    <arg name="depth_topic" value= "/front/camera/depth/image_rect_raw" />
+	<arg name="rgb_topic" value= "/front/camera/color/image_raw" />
+	<arg name="camera_info_topic" value= "/front/camera/color/camera_info" />
+   	<arg name="approx_sync" value="false" />
+	<arg name="rtabmapviz" value="false" />
+    <arg name="database_path" value="~/Documents/RTAB-Map/1.db"/> >
+	
+	</include>  
+
+
+</launch>

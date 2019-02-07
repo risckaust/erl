@@ -1,0 +1,156 @@
+<launch>
+    <arg name="output"                                  default="screen"/>
+    <arg name="output_supress"                          default="log"  />
+    <arg name="rviz"                                    default="true" />
+    <arg name="planning"                                default="true" />
+    <arg name="mapping"                                 default="true"/> 
+    <arg name="localization"                            default="false"/>
+    <arg name="detection"                               default="false" />
+    <param name="use_sim_time"                          value="true" />
+
+
+    <!-- CAMERAS topics names and transfomration + frame names-->
+    <arg name="depth_camera_image_topic"                default="/camera_down/rgb/image_raw"/>
+    <arg name="depth_camera_info_topic"                 default="/camera_down/depth/camera_info"/>
+    <arg name="depth_camera_pointcloud_topic"           default="/camera_down/depth/points"/>
+    <arg name="depth_camera_frame_id"                   default="camera_link_down"/>
+    <arg name="rgb_topic"                               default="/camera/rgb/image_raw" />
+    <arg name="depth_topic"                             default="/camera/depth/image_raw" />
+    <arg name="camera_info_topic"                       default="/camera/rgb/camera_info" />
+    <arg name="frame_id"                                default="fcu"/>
+    <arg name="odom_frame_id"                           default="local_origin"/>
+    <arg name="map_frame_id"                            default="world"/>
+    <node pkg="tf" type="static_transform_publisher"    name="tf_depth_camera"     args="0 0 0 -1.57 0 -1.57 fcu camera_link 10"/>
+    <node pkg="tf" type="static_transform_publisher"    name="tf_depth_camera_2"   args="0 0 0 -1.57 0 -3.14 fcu $(arg depth_camera_frame_id) 10"/> 
+    <node pkg="tf" type="static_transform_publisher"    name="tf_90_deg"           args="0 0 0 0 0 0 world local_origin 10"/>
+    
+
+    <!-- SIMULATION (SITL): PX4 + MAVROS + FORWARD CAMERA launch node -->
+    <arg name="world_file_name"                         default="erl" />
+    <arg name="world_path"                              default="$(find local_planner)/../sim/worlds/$(arg world_file_name).world" />
+    <include file="$(find local_planner)/launch/local_planner_sitl_mavros.launch" >
+        <arg name="model"                               value="iris_depth_camera" />
+        <arg name="world_path"                          value="$(arg world_path)" />
+    </include>
+    
+
+    <!-- LOCAL PLANNER launch node -->
+    <env name="ROSCONSOLE_CONFIG_FILE" value="$(find local_planner)/resource/custom_rosconsole.conf"/>
+    <rosparam command="load" file="$(find local_planner)/cfg/params.yaml"/>
+    <arg name="pointcloud_topics_simulator"             default="[/camera/depth/points]"/>
+    <node if="$(arg planning)" name="local_planner_node" pkg="local_planner" type="local_planner_node" output="$(arg output_supress)" >
+        <param name="goal_x_param"                      value="3" />
+        <param name="goal_y_param"                      value="8"/>
+        <param name="goal_z_param"                      value="5" />
+        <param name="world_name"                        value="$(find local_planner)/../sim/worlds/$(arg world_file_name).yaml" />
+        <rosparam param="pointcloud_topics" subst_value="True">$(arg pointcloud_topics_simulator)</rosparam> 
+    </node>
+
+
+	<!-- RTABMAP MAPPING launch node -->
+    <arg name="subscribe_depth"                         default="true"/>
+    <arg name="subscribe_rgbd"                          default="false"/>
+    <arg name="subscribe_scan"                          default="false"/>
+    <arg name="scan_topic"                              default="/scan"/>
+    <arg name="subscribe_scan_cloud"                    default="false"/>
+    <arg name="scan_cloud_topic"                        default="/scan_cloud"/>
+    <arg name="odom_topic"                              default="/mavros/local_position/odom"/>
+    <arg name="database_path"                           default="~/Documents/RTAB-Map/simulation/rtabmap.db"/>
+    <arg name="rtabmap_args"                            default="--delete_db_on_start"/> <!-- must be removed for multi session mapping, removing it preoduces error at the moment :/ -->
+    <arg name="launch_prefix"                           default=""/> 
+    <arg name="approx_sync"                             default="true"/> <!-- if timestamps of the input topics are not synchronized -->
+    <arg name="namespace"                               default="rtabmap"/>
+    <arg name="wait_for_transform"                      default="0.2"/>
+    <group ns="rtabmap">
+        <node if="$(arg mapping)" name="rtabmap" pkg="rtabmap_ros" type="rtabmap" output="screen" args="$(arg rtabmap_args)" launch-prefix="$(arg launch_prefix)">
+			<param name="database_path"                 type="string"   value="$(arg database_path)"/>
+            <param name="subscribe_depth"               type="bool"     value="$(arg subscribe_depth)"/>
+            <param name="subscribe_rgbd"                type="bool"     value="$(arg subscribe_rgbd)"/>
+            <param name="subscribe_scan"                type="bool"     value="$(arg subscribe_scan)"/>
+            <param name="subscribe_scan_cloud"          type="bool"     value="$(arg subscribe_scan_cloud)"/>
+            <param name="frame_id"                      type="string"   value="$(arg frame_id)"/>
+            <param name="odom_frame_id"                 type="string"   value="$(arg odom_frame_id)"/>
+            <param name="map_frame_id"                  type="string"   value="$(arg map_frame_id)"/>
+            <param name="odom_tf_linear_variance"                       value="0.001"/>
+			<param name="odom_tf_angular_variance"                      value="0.001"/>
+            <param name="wait_for_transform_duration"   type="double"   value="$(arg wait_for_transform)"/>
+            <param name="approx_sync"                   type="bool"     value="$(arg approx_sync)"/>
+            <remap from="odom"                          to="$(arg odom_topic)"/>
+            <remap from="rgb/image"                     to="$(arg rgb_topic)"/>
+			<remap from="depth/image"                   to="$(arg depth_topic)"/>
+			<remap from="rgb/camera_info"               to="$(arg camera_info_topic)"/>
+            <remap from="scan"                          to="$(arg scan_topic)"/>
+            <remap from="scan_cloud"                    to="$(arg scan_cloud_topic)"/>
+            <param name="queue_size"                    type="int"      value="10"/>
+            <param name="RGBD/NeighborLinkRefining"     type="string"   value="false"/> 
+            <param name="RGBD/ProximityBySpace"         type="string"   value="false"/> <!-- Referred paper did only global loop closure detection -->
+            <!--param name="RGBD/ProximityBySpace"		type="string" value="true"/--> <!-- Local loop closure detection (using estimated position) with locations in WM -->
+            <param name="RGBD/ProximityPathMaxNeighbors" type="string"  value="0"/>
+            <param name="RGBD/ProximityByTime"          type="string"   value="false"/> 
+            <param name="RGBD/OptimizeMaxError"         type="string"   value="0.25"/>
+            <param name="RGBD/OptimizeFromGraphEnd"     type="string"   value="true"/>
+            <!--param name="RGBD/OptimizeFromGraphEnd" type="string" value="false"/-->   <!-- Set to false to generate map correction between /map and /odom -->
+            <param name="RGBD/AngularUpdate"            type="string"   value="0.01"/>
+            <param name="RGBD/LinearUpdate"             type="string"   value="0.01"/>
+            <param name="Reg/Strategy"                  type="string"   value="0"/>      <!-- Loop closure transformation: 0=Visual, 1=ICP, 2=Visual+ICP -->
+            <param name="Reg/Force3DoF"                 type="string"   value="true"/>
+            <param name="Vis/MinInliers"                type="string"   value="5"/>      <!-- 3D visual words minimum inliers to accept loop closure -->
+            <param name="Vis/MaxDepth"                  type="string"   value="7"/>      
+            <param name="Vis/InlierDistance"		    type="string"   value="0.1"/>     <!-- 3D visual words correspondence distance -->
+            <param name="Kp/TfIdfLikelihoodUsed"        type="string"   value="false"/>
+            <param name="Kp/DetectorStrategy"           type="string"   value="0"/>      <!-- use SURF -->
+            <param name="Kp/MaxFeatures"                type="string"   value="400"/>
+            <param name="Kp/MaxDepth"				    type="string"   value="0"/>
+            <param name="Kp/IncrementalFlann"           type="string"   value="false"/>  <!-- Referred paper didn't use incremental FLANN -->
+            <param name="Optimizer/Strategy"            type="string"   value="0"/>      <!-- TORO is the most stable for multi-session mapping -->
+            <param name="Optimizer/Iterations"          type="string"   value="100"/> 
+            <param name="Rtabmap/TimeThr"               type="string"   value="700"/>
+            <param name="Mem/RehearsalSimilarity"       type="string"   value="0.45"/>
+            <param name="Bayes/FullPredictionUpdate"    type="string"   value="true"/>
+            <param name="Grid/DepthDecimation"		    type="string"   value="1"/>
+            <param name="Grid/FromDepth"                type="string"   value="true"/> <!-- Create 2D occupancy grid from laser scan -->
+            <param name="Grid/GroundIsObstacle"         type="string"   value="false"/>
+            <param name="Grid/RangeMax"                 type="string"   value="7"/>
+			<param name="Mem/IncrementalMemory"         type="string"   value="true"/>
+            <param name="Mem/UseOdomFeatures"           type="string"   value="false"/>
+		</node>
+	</group>
+
+
+    <!-- DARKNET OBJECT DETECTION launch node -->
+    <arg name="darknet_bounding_boxes_topics"           default="/darknet_ros/bounding_boxes" />
+    <arg name="yolo_weights_path"                       default="$(find darknet_ros)/yolo_network_config/weights"/>
+    <arg name="yolo_config_path"                        default="$(find darknet_ros)/yolo_network_config/cfg"/>
+    <rosparam command="load" ns="darknet_ros"           file="$(find darknet_ros)/config/ros.yaml"/>
+    <rosparam command="load" ns="darknet_ros"           file="$(find darknet_ros)/config/yolov2-tiny-voc.yaml"/>
+    <node if="$(arg detection)" pkg="darknet_ros"       type="darknet_ros" name="darknet_ros" output="$(arg output_supress)" launch-prefix="">
+        <param name="weights_path"                      value="$(arg yolo_weights_path)" />
+        <param name="config_path"                       value="$(arg yolo_config_path)"  />
+        <param name="subscribers/camera_reading/topic"  value="$(arg depth_camera_image_topic)"/>
+        <param name="publishers/bounding_boxes/topic"   value="$(arg darknet_bounding_boxes_topics)"/>
+    </node>
+
+
+    <!-- OBJECT LOCALIZATION launch node -->
+    <arg name="detection_class"                         default="" />
+    <arg name="queue_size"                              default="1" />
+    <arg name="local_pose_topic"                        default="/mavros/local_position/pose"/>
+    <arg name="published_pose_topic"                    default="/detected_object_3d_pos"/>
+    <node if="$(arg detection)" name="object_localizer_node" pkg="object_localizer" type="object_localizer_node" output="$(arg output)">
+        <param name="camera_info_topic"                 value="$(arg depth_camera_info_topic)"/>
+        <param name="darknet_bounding_boxes_topic" 	    value="$(arg darknet_bounding_boxes_topics)"/>
+        <param name="pose_topic" 	                    value="$(arg local_pose_topic)"/>
+        <param name="detection_class" 	                value="$(arg detection_class)"/>
+        <param name="queue_size"                        value="$(arg queue_size)"/>
+        <param name="published_pose_topic"              value="$(arg published_pose_topic)"/>
+        <param name="camera_pointcloud_topic"           value="$(arg depth_camera_pointcloud_topic)"/>
+    </node>
+
+
+    <!-- RVIZ -->
+    <node pkg="rviz" type="rviz" output="screen" name="rviz" respawn="true"
+          args="-d $(find local_planner)/resource/mapping_detection_avoidance.rviz" />
+
+</launch>
+
+
