@@ -114,8 +114,8 @@ class Controller:
 		# self.start_state = 'WAYPOINT3'
 		# self.start_state = 'WAYPOINT4'
 		# self.start_state = 'WORKER1SEARCH'
-		# self.start_state = 'LOADPACKAGE2'
-		self.start_state = 'GOTOBUILDING'
+		self.start_state = 'LOADPACKAGE2'
+		# self.start_state = 'GOTOBUILDING'
 		# self.start_state = 'ENTERBUILDING'
 		# self.start_state = 'WORKER2SEARCH'
 		# self.start_state = 'MAPPING'
@@ -130,8 +130,8 @@ class Controller:
 		
 		#Waypoints GPS Coordiantes
 
-		self.landing_zone_lat = 22.3184053#47.397742 #Lat in simulation
-		self.landing_zone_lon = 39.1020018#8.5455939 #Lon in simulation
+		self.landing_zone_lat = 22.2971244#22.3184053#47.397742 #Lat in simulation
+		self.landing_zone_lon = 39.0936682#39.1020018#8.5455939 #Lon in simulation
 
 		self.waypoint1_lat = 22.3118631#22.3070405#22.317490
 		self.waypoint1_lon = 39.0952322#39.1047228#39.097909 # Location of Testing Field at KAUST - a little ways down field
@@ -168,14 +168,14 @@ class Controller:
 
 		# ----THIS INFO IS ONLY IF WE DON'T WANT TO BASE SEARCH OFF OF BUILDING GPS CENTER POINT----#
 		#############################################################################################
-		self.bldg_search_corner1_lat = 22.3184444# Simulation: 47.3976247 # Looking down at the play-field, this corner is the top right
-		self.bldg_search_corner1_lon = 39.1019761# Simulation: 8.5455773	# Looking down at the play-field, this corner is the top right
-		self.bldg_search_corner2_lat = 22.3187271# Simulation: 47.3978486 # Looking down at the play-field, this corner is the top left
-		self.bldg_search_corner2_lon = 39.1021202# Simulation: 8.5455894 # Looking down at the play-field, this corner is the top left
-		self.bldg_search_corner3_lat = 22.3188133# Simulation: 47.3978593 # Looking down at the play-field, this corner is the bottom left
-		self.bldg_search_corner3_lon = 39.1019476# Simulation: 8.5454345 # Looking down at the play-field, this corner is the bottom left
-		self.bldg_search_corner4_lat = 22.3185138# Simulation: 47.3976353 # Looking down at the play-field, this corner is the bottom right
-		self.bldg_search_corner4_lon = 39.1017642# Simulation: 8.5454157 # Looking down at the play-field, this corner is the bottom right
+		self.bldg_search_corner1_lat = 22.2971558#22.3184444# Simulation: 47.3976247 # Looking down at the play-field, this corner is the top right
+		self.bldg_search_corner1_lon = 39.0936685#39.1019761# Simulation: 8.5455773	# Looking down at the play-field, this corner is the top right
+		self.bldg_search_corner2_lat = 22.2973265#22.3187271# Simulation: 47.3978486 # Looking down at the play-field, this corner is the top left
+		self.bldg_search_corner2_lon = 39.0940323#39.1021202# Simulation: 8.5455894 # Looking down at the play-field, this corner is the top left
+		self.bldg_search_corner3_lat = 22.2975616#22.3188133# Simulation: 47.3978593 # Looking down at the play-field, this corner is the bottom left
+		self.bldg_search_corner3_lon = 39.0939016#39.1019476# Simulation: 8.5454345 # Looking down at the play-field, this corner is the bottom left
+		self.bldg_search_corner4_lat = 22.2973908#22.3185138# Simulation: 47.3976353 # Looking down at the play-field, this corner is the bottom right
+		self.bldg_search_corner4_lon = 39.0935343#39.1017642# Simulation: 8.5454157 # Looking down at the play-field, this corner is the bottom right
 		#############################################################################################
 
 		# Outside Worker Search Variables in GPS
@@ -183,12 +183,12 @@ class Controller:
 		self.building_center_lat = 22.317575 # 22.317575 Roughly the center of the KAUST field
 		self.building_center_lon = 39.0984	# 39.0984 Roughly the center of the KAUST field
 
-		self.building_entr1_lat = 22.3185652#47.3976886 # Simulation value
-		self.building_entr1_lon = 39.1020314#8.5455664 # Simulation value
-		self.building_entr2_lat = 22.3186021 # Simlulation value
-		self.building_entr2_lon = 39.1020595 # Simulation value
-		self.building_entr3_lat = 22.3186403
-		self.building_entr3_lon = 39.1020712 # Simulation value
+		self.building_entr1_lat = 22.2972073#22.3185652#47.3976886 # Simulation value
+		self.building_entr1_lon = 39.0937791#39.1020314#8.5455664 # Simulation value
+		self.building_entr2_lat = 22.2972398#22.3186021 # Simlulation value
+		self.building_entr2_lon = 39.0938500#39.1020595 # Simulation value
+		self.building_entr3_lat = 22.2972719#22.3186403
+		self.building_entr3_lon = 39.0939243#39.1020712 # Simulation value
 
 	###################################################################################################################
 	#--------------------------------------- VARIABLES USED IN CODE --------------------------------------------------# 
@@ -704,7 +704,7 @@ class Controller:
 		# self.z_limit_warn = self.z_limit - .5
 
 		## Should be very close to (0,0) in local coordinate frame
-		#self.landing_zone_x, self.landing_zone_y, _ = pm.geodetic2enu(self.landing_zone_lat, self.landing_zone_lon, self.z_limit, self.current_lat, self.current_lon, self.current_alt)
+		self.landing_zone_x, self.landing_zone_y, _ = pm.geodetic2enu(self.landing_zone_lat, self.landing_zone_lon, self.z_limit, self.current_lat, self.current_lon, self.current_alt)
 
 		# self.waypoint1_x, self.waypoint1_y, _ = pm.geodetic2enu(self.waypoint1_lat, self.waypoint1_lon, self.waypoint1_alt, self.current_lat, self.current_lon, self.current_alt)
 		# self.waypoint2_x, self.waypoint2_y, _ = pm.geodetic2enu(self.waypoint2_lat, self.waypoint2_lon, self.waypoint2_alt, self.current_lat, self.current_lon, self.current_alt)
@@ -724,25 +724,25 @@ class Controller:
 		# self.building_center_x, self.building_center_y, _ = pm.geodetic2enu(self.building_center_lat, self.building_center_lon, self.z_limit, self.current_lat, self.current_lon, self.current_alt)
 
 		# #----- UNCOMMENT THIS ONLY IF YOU WANT TO SPECIFY LOCAL ENTRANCE SEARCH PATH BASED ON GPS LOCATIONS OF CORNERs OF SQUARE PATH INSTEAD OF BUILDING CENTER POINT ------ #
-		#self.entrance_search_corner1_x, self.entrance_search_corner1_y, _ = pm.geodetic2enu(self.bldg_search_corner1_lat, self.bldg_search_corner1_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
-		#self.entrance_search_corner2_x, self.entrance_search_corner2_y, _ = pm.geodetic2enu(self.bldg_search_corner2_lat, self.bldg_search_corner2_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
-		#self.entrance_search_corner3_x, self.entrance_search_corner3_y, _ = pm.geodetic2enu(self.bldg_search_corner3_lat, self.bldg_search_corner3_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
-		#self.entrance_search_corner4_x, self.entrance_search_corner4_y, _ = pm.geodetic2enu(self.bldg_search_corner4_lat, self.bldg_search_corner4_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
+		self.entrance_search_corner1_x, self.entrance_search_corner1_y, _ = pm.geodetic2enu(self.bldg_search_corner1_lat, self.bldg_search_corner1_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
+		self.entrance_search_corner2_x, self.entrance_search_corner2_y, _ = pm.geodetic2enu(self.bldg_search_corner2_lat, self.bldg_search_corner2_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
+		self.entrance_search_corner3_x, self.entrance_search_corner3_y, _ = pm.geodetic2enu(self.bldg_search_corner3_lat, self.bldg_search_corner3_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
+		self.entrance_search_corner4_x, self.entrance_search_corner4_y, _ = pm.geodetic2enu(self.bldg_search_corner4_lat, self.bldg_search_corner4_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
 		
-		#self.yaw_top_z = atan2((self.entrance_search_corner4_y-self.entrance_search_corner1_y),(self.entrance_search_corner4_x-self.entrance_search_corner1_x))
-		#self.yaw_right_z = atan2((self.entrance_search_corner2_y-self.entrance_search_corner1_y),(self.entrance_search_corner2_x-self.entrance_search_corner1_x))
-		#self.yaw_bottom_z = atan2((self.entrance_search_corner1_y-self.entrance_search_corner4_y),(self.entrance_search_corner1_x-self.entrance_search_corner4_x))
-		#self.yaw_left_z = atan2((self.entrance_search_corner1_y-self.entrance_search_corner2_y),(self.entrance_search_corner1_x-self.entrance_search_corner2_x))
+		self.yaw_top_z = atan2((self.entrance_search_corner4_y-self.entrance_search_corner1_y),(self.entrance_search_corner4_x-self.entrance_search_corner1_x))
+		self.yaw_right_z = atan2((self.entrance_search_corner2_y-self.entrance_search_corner1_y),(self.entrance_search_corner2_x-self.entrance_search_corner1_x))
+		self.yaw_bottom_z = atan2((self.entrance_search_corner1_y-self.entrance_search_corner4_y),(self.entrance_search_corner1_x-self.entrance_search_corner4_x))
+		self.yaw_left_z = atan2((self.entrance_search_corner1_y-self.entrance_search_corner2_y),(self.entrance_search_corner1_x-self.entrance_search_corner2_x))
 		#-------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
 
-		#self.building_entr1_x, self.building_entr1_y, _ = pm.geodetic2enu(self.building_entr1_lat, self.building_entr1_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
-		#self.building_entr2_x, self.building_entr2_y, _ = pm.geodetic2enu(self.building_entr2_lat, self.building_entr2_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
-		#self.building_entr3_x, self.building_entr3_y, _ = pm.geodetic2enu(self.building_entr3_lat, self.building_entr3_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
+		self.building_entr1_x, self.building_entr1_y, _ = pm.geodetic2enu(self.building_entr1_lat, self.building_entr1_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
+		self.building_entr2_x, self.building_entr2_y, _ = pm.geodetic2enu(self.building_entr2_lat, self.building_entr2_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
+		self.building_entr3_x, self.building_entr3_y, _ = pm.geodetic2enu(self.building_entr3_lat, self.building_entr3_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
 
 		# THESE WILL NEED TO BE UPDATED DEPENDING ON WHERE THE ENTRANCES ARE
-		#self.yaw_building_entr1 = self.yaw_top_z
-		#self.yaw_building_entr2 = self.yaw_top_z
-		#self.yaw_building_entr3 = self.yaw_top_z
+		self.yaw_building_entr1 = self.yaw_top_z
+		self.yaw_building_entr2 = self.yaw_top_z
+		self.yaw_building_entr3 = self.yaw_top_z
 
 		#####################################################################################################################################
 
