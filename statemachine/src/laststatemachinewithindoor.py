@@ -116,7 +116,7 @@ class Controller:
 		# self.start_state = 'WORKER1SEARCH'
 		# self.start_state = 'WORKER2SEARCH'
 		# self.start_state = 'LOADPACKAGE2'
-		self.start_state = 'GOTOBUILDING'
+		self.start_state = 'MAPPING'
 		# self.start_state = 'ENTRANCESEARCH'
 		# self.start_state = 'ENTERBUILDING'
 		# self.start_state = 'WORKER2SEARCH'
@@ -191,7 +191,9 @@ class Controller:
 
 		# Outside Worker Search Variables in GPS
 		self.building_center_lat = 22.2974008   #22.2973691 # 22.317575 Roughly the center of the KAUST field
-		self.building_center_lon = 39.0937677             #39.0937654	# 39.0984 Roughly the center of the KAUST field
+		self.building_center_lon = 39.0937677 
+		self.building_center_lat= 47.3977419
+		self.building_center_lon=8.5455939            #39.0937654	# 39.0984 Roughly the center of the KAUST field
 
 		self.enter_bldg_hgt = 1.5
 
@@ -215,12 +217,12 @@ class Controller:
 
 		#--------------------Random Variables---------------------#
 		###########################################################
-		self.uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+		# self.uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
 
-		roslaunch.configure_logging(self.uuid)
-		#self.person = roslaunch.parent.ROSLaunchParent(self.uuid, ["/home/risc/catkin_ws/src/erl/yolo_ros_vino/launch/person_yolo_ros_vino.launch"])
-		#self.tags = roslaunch.parent.ROSLaunchParent(self.uuid, ["/home/risc/catkin_ws/src/erl/yolo_ros_vino/launch/tags_yolo_ros_vino.launch"])#########################################################################################################3
-		self.mapping = roslaunch.parent.ROSLaunchParent(self.uuid, ["/home/risc/catkin_ws/src/erl/my_package/launch/miniMission.launch"])
+		# roslaunch.configure_logging(self.uuid)
+		# #self.person = roslaunch.parent.ROSLaunchParent(self.uuid, ["/home/risc/catkin_ws/src/erl/yolo_ros_vino/launch/person_yolo_ros_vino.launch"])
+		# #self.tags = roslaunch.parent.ROSLaunchParent(self.uuid, ["/home/risc/catkin_ws/src/erl/yolo_ros_vino/launch/tags_yolo_ros_vino.launch"])#########################################################################################################3
+		# self.mapping = roslaunch.parent.ROSLaunchParent(self.uuid, ["/home/risc/catkin_ws/src/erl/my_package/launch/miniMission.launch"])
 		# Instantiate setpoint topic structures
 		self.positionSp	= PoseStamped()
 		#defining the modes
@@ -481,7 +483,7 @@ class Controller:
 		self.ready2captureblue = 0
 		self.ready2capturegreen = 0
 
-		self.unblocked_entrance = 0
+		self.unblocked_entrance = 1
 		self.unblocked_entrance_x = 0
 		self.unblocked_entrance_y = 0
 
@@ -499,7 +501,7 @@ class Controller:
 		self.dx=0
 		self.dy=0
 		self.building_param = [0, 0, 0]
-		self.current_r =2
+		self.current_r =6
 
 		self.target_y = 0
 		self.target_x = 0
@@ -658,18 +660,22 @@ class Controller:
 				# Save your OpenCV2 image as a jpeg
 				logname = "/home/risc/catkin_ws/src/erl/object_localization/src/ObjectOfInterest_" + str(self.start_time) + ".txt"
 				hs = open(logname,"a")
-				s = "\nTime Stamp (sec):\n"
-				s = s + str(self.timer_sec)
+				# s = "\nTime Stamp (sec):\n"
+				s = str(self.timer_sec) + "\n"
 				if self.WORKER1SEARCH or self.WAYPOINT1 or self.WAYPOINT2 or self.WAYPOINT3 + self.WAYPOINT4:
 					picname = "/home/risc/catkin_ws/src/erl/object_localization/src/Worker1_" + str(self.start_time) + ".jpeg"
 					cv2.imwrite(picname, cv2_img)
-					s = s + "\nTarget ID:\nOutside Worker\nTarget Position (Lat, Lon):\n"
-					s = s + "(" + str(self.worker1_lat) + ", " + str(self.worker1_lon) + ")\n"
+					# s = s + "\nTarget ID:\nOutside Worker\nTarget Position (Lat, Lon):\n"
+					# s = s + "(" + str(self.worker1_lat) + ", " + str(self.worker1_lon) + ")\n"
+					s = s + str(self.worker1_lat) + "\n"
+					s = s + str(self.worker1_lon) + "\n"
 				elif self.WORKER2SEARCH:
 					picname = "/home/risc/catkin_ws/src/erl/object_localization/src/Worker2_" + str(self.start_time) + ".jpeg"
 					cv2.imwrite(picname, cv2_img)
-					s = s + "\nTarget ID:\nInside Worker\nTarget Position (Lat, Lon):\n"
-					s = s + "(" + str(self.worker2_lat) + ", " + str(self.worker2_lon) + ")\n"
+					# s = s + "\nTarget ID:\nInside Worker\nTarget Position (Lat, Lon):\n"
+					# s = s + "(" + str(self.worker2_lat) + ", " + str(self.worker2_lon) + ")\n"
+					s = s + str(self.worker2_lat) + "\n"
+					s = s + str(self.worker2_lon) + "\n"
 				hs.write(s)
 				hs.close()
 
@@ -692,28 +698,34 @@ class Controller:
 				if self.ready2capturered:
 					name = "/home/risc/catkin_ws/src/erl/object_localization/src/Red" + str(self.red_tag.total_num) + "_" + str(self.start_time) + ".jpeg"
 					cv2.imwrite(name, cv2_img)
-					r = "\nTime Stamp (sec):\n"
-					r = r + str(self.timer_sec)
-					r = r + "\nTarget ID:\nRed Tag\nTarget Position (Lat, Lon):\n"
-					r = r + "(" + str(self.red_tag.lat) + ", " + str(self.red_tag.lon) + ")\n"
+					# r = "\nTime Stamp (sec):\n"
+					r = str(self.timer_sec) + "\n"
+					# r = r + "\nTarget ID:\nRed Tag\nTarget Position (Lat, Lon):\n"
+					# r = r + "(" + str(self.red_tag.lat) + ", " + str(self.red_tag.lon) + ")\n"
+					r = r + str(self.red_tag.lat) + "\n"
+					r = r + str(self.red_tag.lon) + "\n"
 					hs.write(r)
 					self.ready2capturered = 0
 				if self.ready2captureblue:
 					name = "/home/risc/catkin_ws/src/erl/object_localization/src/Blue" + str(self.blue_tag.total_num) + "_" + str(self.start_time) + ".jpeg"
 					cv2.imwrite(name, cv2_img)
-					b = "\nTime Stamp (sec):\n"
-					b = b + str(self.timer_sec)
-					b = b + "\nTarget ID:\nBlue Tag\nTarget Position (Lat, Lon):\n"
-					b = b + "(" + str(self.blue_tag.lat) + ", " + str(self.blue_tag.lon) + ")\n"
+					# b = "\nTime Stamp (sec):\n"
+					b = str(self.timer_sec) + "\n"
+					# b = b + "\nTarget ID:\nBlue Tag\nTarget Position (Lat, Lon):\n"
+					# b = b + "(" + str(self.blue_tag.lat) + ", " + str(self.blue_tag.lon) + ")\n"
+					b = b + str(self.blue_tag.lat) + "\n"
+					b = b + str(self.blue_tag.lon) + "\n"
 					hs.write(b)
 					self.ready2captureblue = 0
 				if self.ready2capturegreen:
 					name = "/home/risc/catkin_ws/src/erl/object_localization/src/Green_" + str(self.start_time) + ".jpeg"
 					cv2.imwrite(name, cv2_img)
-					g = "\nTime Stamp (sec):\n"
-					g = g + str(self.timer_sec)
-					g = g + "\nTarget ID:\nGreen Tag\nTarget Position (Lat, Lon):\n"
-					g = g + "(" + str(self.green_tag.lat) + ", " + str(self.green_tag.lon) + ")\n"
+					# g = "\nTime Stamp (sec):\n"
+					g = str(self.timer_sec) + "\n"
+					# g = g + "\nTarget ID:\nGreen Tag\nTarget Position (Lat, Lon):\n"
+					# g = g + "(" + str(self.green_tag.lat) + ", " + str(self.green_tag.lon) + ")\n"
+					g = g + str(self.green_tag.lat) + "\n"
+					g = g + str(self.green_tag.lon) + "\n"
 					hs.write(g)
 					self.ready2capturegreen = 0
 					rospy.logwarn('TOOK PICTURE!')
@@ -730,17 +742,17 @@ class Controller:
 			#name = "/home/risc/catkin_ws/src/object_localization/src/VehicleNavData_" + str(self.start_time) + ".txt"
 			name = "/home/risc/catkin_ws/src/erl" + str(self.start_time) + ".txt"
 			hs = open(name,"a")
-			s = "\nTime Stamp (sec):\n"
-			s = s + str(self.timer_sec)
-			s = s + "\nVehicle Location (Lat, Lon):\n"
-			s = s + "(" + str(self.current_lat) + ", " + str(self.current_lon) + ")\n"
-			s = s + "Current Heading (0=North, 90=East):\n"
-			s = s + str(self.current_yaw_deg)
-			s = s + "\nCurrent State:\n"
-			s = s + self.current_state
-			s = s + "\nCurrent Signal:\n"
-			s = s + self.current_signal
-			s = s + "\n"
+			# s = "\nTime Stamp (sec):\n"
+			s = str(self.timer_sec) + "\n"
+			# s = s + "\nVehicle Location (Lat, Lon):\n"
+			s = s + str(self.current_lat) + "\n"
+			s = s + str(self.current_lon) + "\n"
+			# s = s + "Current Heading (0=North, 90=East):\n"
+			s = s + str(self.current_yaw_deg) + "\n"
+			# s = s + "\nCurrent State:\n"
+			s = s + self.current_state + "\n"
+			# s = s + "\nCurrent Signal:\n"
+			s = s + self.current_signal + "\n"
 			hs.write(s)
 			hs.close()
 			self.previous_timer_sec = round(rospy.get_time() - self.start_time)
@@ -750,46 +762,46 @@ class Controller:
 	def setWayoints_and_Fence(self):
 		# Converts all GPS locations to the local frame.
 
-		rospy.loginfo('Current lat')
-		rospy.loginfo(self.current_lat)
+		# rospy.loginfo('Current lat')
+		# rospy.loginfo(self.current_lat)
 
-		rospy.loginfo('Current lon')
-		rospy.loginfo(self.current_lon)
+		# rospy.loginfo('Current lon')
+		# rospy.loginfo(self.current_lon)
 
-		rospy.loginfo('Current alt')
-		rospy.loginfo(self.current_alt)
+		# rospy.loginfo('Current alt')
+		# rospy.loginfo(self.current_alt)
 
-		rospy.loginfo('Current x')
-		rospy.loginfo(self.current_local_x)
+		# rospy.loginfo('Current x')
+		# rospy.loginfo(self.current_local_x)
 
-		rospy.loginfo('Current y')
-		rospy.loginfo(self.current_local_y)
+		# rospy.loginfo('Current y')
+		# rospy.loginfo(self.current_local_y)
 
-		rospy.loginfo('Current z')
-		rospy.loginfo(self.current_local_z)
+		# rospy.loginfo('Current z')
+		# rospy.loginfo(self.current_local_z)
 
-		#UNCOMMENT THIS CODE FOR GPS USE
-		#####################################################################################################################################
-		(self.home_lat, self.home_lon, _) = pm.enu2geodetic(0,0,0,self.current_lat,self.current_lon,0)
+		# #UNCOMMENT THIS CODE FOR GPS USE
+		# #####################################################################################################################################
+		# (self.home_lat, self.home_lon, _) = pm.enu2geodetic(0,0,0,self.current_lat,self.current_lon,0)
 
-		# self.x_FenceLimit_max, self.y_FenceLimit_max, _ = pm.geodetic2enu(self.lat_max, self.lon_max, self.z_limit, self.current_lat, self.current_lon, self.current_alt)
-		# self.x_FenceLimit_min, self.y_FenceLimit_min, _ = pm.geodetic2enu(self.lat_min, self.lon_min, self.z_limit, self.current_lat, self.current_lon, self.current_alt)
-		# rospy.loginfo('Successfully set fence limit maxes and mins')
+		# # self.x_FenceLimit_max, self.y_FenceLimit_max, _ = pm.geodetic2enu(self.lat_max, self.lon_max, self.z_limit, self.current_lat, self.current_lon, self.current_alt)
+		# # self.x_FenceLimit_min, self.y_FenceLimit_min, _ = pm.geodetic2enu(self.lat_min, self.lon_min, self.z_limit, self.current_lat, self.current_lon, self.current_alt)
+		# # rospy.loginfo('Successfully set fence limit maxes and mins')
 
-		# self.x_fence_max_warn = self.x_FenceLimit_max - 2
-		# self.x_fence_min_warn = self.x_FenceLimit_min + 2
-		# self.y_fence_max_warn = self.y_FenceLimit_max - 2
-		# self.y_fence_min_warn = self.y_FenceLimit_min + 2
-		# self.z_limit_warn = self.z_limit - .5
+		# # self.x_fence_max_warn = self.x_FenceLimit_max - 2
+		# # self.x_fence_min_warn = self.x_FenceLimit_min + 2
+		# # self.y_fence_max_warn = self.y_FenceLimit_max - 2
+		# # self.y_fence_min_warn = self.y_FenceLimit_min + 2
+		# # self.z_limit_warn = self.z_limit - .5
 
-		## Should be very close to (0,0) in local coordinate frame
-		# self.landing_zone_x, self.landing_zone_y, _ = pm.geodetic2enu(self.landing_zone_lat, self.landing_zone_lon, self.z_limit, self.current_lat, self.current_lon, self.current_alt)##########################################################################################################################
+		# ## Should be very close to (0,0) in local coordinate frame
+		# # self.landing_zone_x, self.landing_zone_y, _ = pm.geodetic2enu(self.landing_zone_lat, self.landing_zone_lon, self.z_limit, self.current_lat, self.current_lon, self.current_alt)##########################################################################################################################
 
-		#self.waypoint1_x, self.waypoint1_y, _ = pm.geodetic2enu(self.waypoint1_lat, self.waypoint1_lon, self.waypoint1_alt, self.current_lat, self.current_lon, self.current_alt)
-		#self.waypoint2_x, self.waypoint2_y, _ = pm.geodetic2enu(self.waypoint2_lat, self.waypoint2_lon, self.waypoint2_alt, self.current_lat, self.current_lon, self.current_alt)######################################################################################################################################################
-		#self.waypoint3_x, self.waypoint3_y, _ = pm.geodetic2enu(self.waypoint3_lat, self.waypoint3_lon, self.waypoint3_alt, self.current_lat, self.current_lon, self.current_alt)
-		#self.waypoint4_x, self.waypoint4_y, _ = pm.geodetic2enu(self.waypoint4_lat, self.waypoint4_lon, self.waypoint4_alt, self.current_lat, self.current_lon, self.current_alt)
-		rospy.loginfo('Successfully set waypoints to x,y,z')
+		# self.waypoint1_x, self.waypoint1_y, _ = pm.geodetic2enu(self.waypoint1_lat, self.waypoint1_lon, self.waypoint1_alt, self.current_lat, self.current_lon, self.current_alt)
+		# self.waypoint2_x, self.waypoint2_y, _ = pm.geodetic2enu(self.waypoint2_lat, self.waypoint2_lon, self.waypoint2_alt, self.current_lat, self.current_lon, self.current_alt)######################################################################################################################################################
+		# self.waypoint3_x, self.waypoint3_y, _ = pm.geodetic2enu(self.waypoint3_lat, self.waypoint3_lon, self.waypoint3_alt, self.current_lat, self.current_lon, self.current_alt)
+		# self.waypoint4_x, self.waypoint4_y, _ = pm.geodetic2enu(self.waypoint4_lat, self.waypoint4_lon, self.waypoint4_alt, self.current_lat, self.current_lon, self.current_alt)
+		# rospy.loginfo('Successfully set waypoints to x,y,z')
 
 		# self.worker1_search_WP1_x, self.worker1_search_WP1_y, _ = pm.geodetic2enu(self.worker1_search_WP1_lat, self.worker1_search_WP1_lon, self.worker1_search_z, self.current_lat, self.current_lon, self.current_alt)
 		# self.worker1_search_WP2_x, self.worker1_search_WP2_y, _ = pm.geodetic2enu(self.worker1_search_WP2_lat, self.worker1_search_WP2_lon, self.worker1_search_z, self.current_lat, self.current_lon, self.current_alt)
@@ -800,9 +812,9 @@ class Controller:
 		# self.worker1_search_WP7_x, self.worker1_search_WP7_y, _ = pm.geodetic2enu(self.worker1_search_WP7_lat, self.worker1_search_WP7_lon, self.worker1_search_z, self.current_lat, self.current_lon, self.current_alt)
 		# self.worker1_search_WP8_x, self.worker1_search_WP8_y, _ = pm.geodetic2enu(self.worker1_search_WP8_lat, self.worker1_search_WP8_lon, self.worker1_search_z, self.current_lat, self.current_lon, self.current_alt)
 
-		#self.building_center_x, self.building_center_y, _ = pm.geodetic2enu(self.building_center_lat, self.building_center_lon, self.z_limit, self.current_lat, self.current_lon, self.current_alt)
+		self.building_center_x, self.building_center_y, _ = pm.geodetic2enu(self.building_center_lat, self.building_center_lon, self.z_limit, self.current_lat, self.current_lon, self.current_alt)
 		
-		# #----- UNCOMMENT THIS ONLY IF YOU WANT TO SPECIFY LOCAL ENTRANCE SEARCH PATH BASED ON GPS LOCATIONS OF CORNERs OF SQUARE PATH INSTEAD OF BUILDING CENTER POINT ------ #
+		# # #----- UNCOMMENT THIS ONLY IF YOU WANT TO SPECIFY LOCAL ENTRANCE SEARCH PATH BASED ON GPS LOCATIONS OF CORNERs OF SQUARE PATH INSTEAD OF BUILDING CENTER POINT ------ #
 		# self.entrance_search_corner1_x, self.entrance_search_corner1_y, _ = pm.geodetic2enu(self.bldg_search_corner1_lat, self.bldg_search_corner1_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
 		# self.entrance_search_corner1_5_x, self.entrance_search_corner1_5_y, _ = pm.geodetic2enu(self.bldg_search_corner1_5_lat, self.bldg_search_corner1_5_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
 		# self.entrance_search_corner2_x, self.entrance_search_corner2_y, _ = pm.geodetic2enu(self.bldg_search_corner2_lat, self.bldg_search_corner2_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)##################################################################################################################
@@ -816,7 +828,7 @@ class Controller:
 		# self.yaw_right_z = atan2((self.entrance_search_corner2_y-self.entrance_search_corner1_y),(self.entrance_search_corner2_x-self.entrance_search_corner1_x))
 		# self.yaw_bottom_z = atan2((self.entrance_search_corner1_y-self.entrance_search_corner4_y),(self.entrance_search_corner1_x-self.entrance_search_corner4_x))##########################################################################################################################
 		# self.yaw_left_z = atan2((self.entrance_search_corner1_y-self.entrance_search_corner2_y),(self.entrance_search_corner1_x-self.entrance_search_corner2_x))
-		#-------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
+		# #-------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
 
 		# self.building_entr1_x, self.building_entr1_y, _ = pm.geodetic2enu(self.building_entr1_lat, self.building_entr1_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
 		# self.building_entr2_x, self.building_entr2_y, _ = pm.geodetic2enu(self.building_entr2_lat, self.building_entr2_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)##########################################################################################################################
@@ -826,36 +838,36 @@ class Controller:
 		# self.building_entr2_inside_x, self.building_entr2_inside_y, _ = pm.geodetic2enu(self.building_entr2_inside_lat, self.building_entr2_inside_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)#################################################################################################
 		# self.building_entr3_inside_x, self.building_entr3_inside_y, _ = pm.geodetic2enu(self.building_entr3_inside_lat, self.building_entr3_inside_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
 
-		# THESE WILL NEED TO BE UPDATED DEPENDING ON WHERE THE ENTRANCES ARE
-		self.yaw_building_entr1 = self.yaw_top_z
-		self.yaw_building_entr2 = self.yaw_top_z
-		self.yaw_building_entr3 = self.yaw_top_z
+		# # THESE WILL NEED TO BE UPDATED DEPENDING ON WHERE THE ENTRANCES ARE
+		# self.yaw_building_entr1 = self.yaw_top_z
+		# self.yaw_building_entr2 = self.yaw_top_z
+		# self.yaw_building_entr3 = self.yaw_top_z
 
-		#####################################################################################################################################
+		# #####################################################################################################################################
 
-		rospy.loginfo('x Fence Max Warn')
-		rospy.loginfo(self.x_fence_max_warn)
-		rospy.loginfo('x Fence Min Warn')
-		rospy.loginfo(self.x_fence_min_warn)
-		rospy.loginfo('y Fence Max Warn')
-		rospy.loginfo(self.y_fence_max_warn)
-		rospy.loginfo('y Fence Min Warn')
-		rospy.loginfo(self.y_fence_min_warn)
-		rospy.loginfo('z Height Limit Warn')
-		rospy.loginfo(self.z_limit_warn)
+		# rospy.loginfo('x Fence Max Warn')
+		# rospy.loginfo(self.x_fence_max_warn)
+		# rospy.loginfo('x Fence Min Warn')
+		# rospy.loginfo(self.x_fence_min_warn)
+		# rospy.loginfo('y Fence Max Warn')
+		# rospy.loginfo(self.y_fence_max_warn)
+		# rospy.loginfo('y Fence Min Warn')
+		# rospy.loginfo(self.y_fence_min_warn)
+		# rospy.loginfo('z Height Limit Warn')
+		# rospy.loginfo(self.z_limit_warn)
 
-		rospy.logwarn('Waypoint x')
-		rospy.logwarn(self.waypoint1_x)
-		rospy.logwarn('Waypoint y')
-		rospy.logwarn(self.waypoint1_y)
-		rospy.logwarn('Waypoint z')
-		rospy.logwarn(self.waypoint1_z)
+		# rospy.logwarn('Waypoint x')
+		# rospy.logwarn(self.waypoint1_x)
+		# rospy.logwarn('Waypoint y')
+		# rospy.logwarn(self.waypoint1_y)
+		# rospy.logwarn('Waypoint z')
+		# rospy.logwarn(self.waypoint1_z)
 
-		rospy.loginfo('Trying to test validity of waypoints')
-		self.isValidWaypoint(self.waypoint1_x,self.waypoint1_y,self.waypoint1_z) # Test whether waypoint 1 is within fence
-		self.isValidWaypoint(self.waypoint2_x,self.waypoint2_y,self.waypoint2_z) # Test whether waypoint 2 is within fence
-		self.isValidWaypoint(self.waypoint3_x,self.waypoint3_y,self.waypoint3_z) # Test whether waypoint 3 is within fence
-		self.isValidWaypoint(self.waypoint4_x,self.waypoint4_y,self.waypoint4_z) # Test whether waypoint 4 is within fence
+		# rospy.loginfo('Trying to test validity of waypoints')
+		# self.isValidWaypoint(self.waypoint1_x,self.waypoint1_y,self.waypoint1_z) # Test whether waypoint 1 is within fence
+		# self.isValidWaypoint(self.waypoint2_x,self.waypoint2_y,self.waypoint2_z) # Test whether waypoint 2 is within fence
+		# self.isValidWaypoint(self.waypoint3_x,self.waypoint3_y,self.waypoint3_z) # Test whether waypoint 3 is within fence
+		# self.isValidWaypoint(self.waypoint4_x,self.waypoint4_y,self.waypoint4_z) # Test whether waypoint 4 is within fence
 
 	def isTooCloseToFence(self):
 		# Function that will always check to see if the drone is too close to the hard
@@ -1527,7 +1539,7 @@ class Controller:
 					quaternion = quaternion_from_euler(0, 0, self.target_yaw)
 					self.positionSp.pose.orientation = Quaternion(*quaternion)  
 					if abs(self.current_local_x-self.building_entr1_x) <.3 and abs(self.current_local_y-self.building_entr1_y)<.3:
-						self.enter_bldg_flag=2 
+						self.exit_bldg_flag=2 
 
 				elif self.unblocked_entrance == 2:
 					self.positionSp.pose.position.x = self.building_entr2_x
@@ -1537,7 +1549,7 @@ class Controller:
 					quaternion = quaternion_from_euler(0, 0, self.target_yaw)
 					self.positionSp.pose.orientation = Quaternion(*quaternion)  
 					if abs(self.current_local_x-self.building_entr2_x) <.3 and abs(self.current_local_y-self.building_entr2_y)<.3:
-						self.enter_bldg_flag=2 
+						self.exit_bldg_flag=2 
 									 
 
 				elif self.unblocked_entrance == 3:
@@ -1548,7 +1560,7 @@ class Controller:
 					quaternion = quaternion_from_euler(0, 0, self.target_yaw)
 					self.positionSp.pose.orientation = Quaternion(*quaternion)  
 					if abs(self.current_local_x-self.building_entr3_x) <.3 and abs(self.current_local_y-self.building_entr3_y)<.3:
-						self.enter_bldg_flag=2
+						self.exit_bldg_flag=2
 
 
 #################################################################INDOOR JUNK#########################################################################################################
@@ -1658,47 +1670,8 @@ class Controller:
 					self.avoidancepar = 4
 				elif (abs(self.avoid_x) > 8+self.building_center_x or abs(self.avoid_y) > 8+self.building_center_y):
 					rospy.logwarn("Avoiding position is out of bounds")
-					if self.avoid_x > 8+self.building_center_x and abs(self.avoid_y) < 8+self.building_center_y:
-						self.avoid_x =7 
-						self.positionSp.pose.position.x = self.avoid_x
-						self.positionSp.pose.position.y = self.avoid_y
-						self.positionSp.pose.position.z = self.indoor_hgt
-						self.positionSp.header.frame_id = 'local_origin'
-						self.target_yaw= math.atan2((self.positionSp.pose.position.y-self.current_local_y),(self.positionSp.pose.position.x-self.current_local_x))
-						quaternion = quaternion_from_euler(0, 0, self.target_yaw)
-						self.positionSp.pose.orientation = Quaternion(*quaternion)
-						self.avoidancepar = 4
-					if self.avoid_x < -8+self.building_center_x and abs(self.avoid_y) < 8+self.building_center_y:
-						self.avoid_x =-7 
-						self.positionSp.pose.position.x = self.avoid_x
-						self.positionSp.pose.position.y = self.avoid_y
-						self.positionSp.pose.position.z = self.indoor_hgt
-						self.positionSp.header.frame_id = 'local_origin'
-						self.target_yaw= math.atan2((self.positionSp.pose.position.y-self.current_local_y),(self.positionSp.pose.position.x-self.current_local_x))
-						quaternion = quaternion_from_euler(0, 0, self.target_yaw)
-						self.positionSp.pose.orientation = Quaternion(*quaternion)
-						self.avoidancepar = 4
-					if  abs(self.avoid_x) < 8+self.building_center_x and self.avoid_y < -8+self.building_center_y:
-						self.avoid_y =-7 
-						self.positionSp.pose.position.x = self.avoid_x
-						self.positionSp.pose.position.y = self.avoid_y
-						self.positionSp.pose.position.z = self.indoor_hgt
-						self.positionSp.header.frame_id = 'local_origin'
-						self.target_yaw= math.atan2((self.positionSp.pose.position.y-self.current_local_y),(self.positionSp.pose.position.x-self.current_local_x))
-						quaternion = quaternion_from_euler(0, 0, self.target_yaw)
-						self.positionSp.pose.orientation = Quaternion(*quaternion)
-						self.avoidancepar = 4
-					if abs(self.avoid_x) < 8+self.building_center_x and self.avoid_y > 8+self.building_center_y:
-						self.avoid_y =7 
-						self.positionSp.pose.position.x = self.avoid_x
-						self.positionSp.pose.position.y = self.avoid_y
-						self.positionSp.pose.position.z = self.indoor_hgt
-						self.positionSp.header.frame_id = 'local_origin'
-						self.target_yaw= math.atan2((self.positionSp.pose.position.y-self.current_local_y),(self.positionSp.pose.position.x-self.current_local_x))
-						quaternion = quaternion_from_euler(0, 0, self.target_yaw)
-						self.positionSp.pose.orientation = Quaternion(*quaternion)
-						self.avoidancepar = 4
-					elif abs(self.avoid_x) > 8+self.building_center_x and abs(self.avoid_y) > 8+self.building_center_y:
+
+					if abs(self.avoid_x) > 8+self.building_center_x or abs(self.avoid_y) > 8+self.building_center_y:
 						rospy.logwarn("At the corner") 
 						self.avoiding_obstacle = 0
 						self.building_param = [0, 0, 0]
@@ -1900,6 +1873,9 @@ class Controller:
 								self.positionSp.pose.orientation = Quaternion(*quaternion)  
 								self.building_param[0] = 1
 
+						if(self.EXITBUILDING):
+							reached_unblocked_entrance=1
+
 			if (self.avoidancepar == 4 ):
 				if (self.minfront < min_dist_to_obstacle):
 					self.avoidancepar =1
@@ -1912,6 +1888,8 @@ class Controller:
 				self.avoiding_obstacle = 0
 				self.building_param = [0, 0, 0]
 				self.avoidancepar = 1
+				if(self.EXITBUILDING):
+					reached_unblocked_entrance=1
 				if self.path_flag == 'Center':
 					self.path_flag = 'None'
 					print ("Flag changed in check and avoid")
@@ -3015,7 +2993,7 @@ def main():
 				K.current_signal = 'Aid Delivered'
 				K.resetStates()
 				K.MAPPING = 1
-				K.path_flag = 'Center'
+				K.path_flag = 'Right'
 				K.current_r = 6
 
 		elif K.MAPPING:
@@ -3027,7 +3005,7 @@ def main():
 
 			############################## THESE ARE THE MAPPING VARIABLES ###########################################
 			if(K.tagflag == 1):
-				K.mapping.start()
+				#K.mapping.start()
 				K.tagflag =0 
 			 # ------>>>>>>>>>> WHEN YOU WANT TO START MAPPING TYPE THIS
 			rospy.loginfo("Mapping started")
@@ -3052,7 +3030,7 @@ def main():
 					print('mapping direction')
 					print(K.mappingdirection)
 				elif (K.current_r != 6):
-					K.mappingdirection =-1
+					K.mappingdirection =2
 					K.current_r=6
 					K.path_flag='Right'
 			elif (K.mappingdirection ==-1 ):
@@ -3077,7 +3055,7 @@ def main():
 				K.resetStates()
 				K.EXITBUILDING = 1
 				K.current_signal = 'Mapping Finished'
-				K.mapping.shutdown()
+				#K.mapping.shutdown()
 
 			
 
@@ -3117,6 +3095,9 @@ def main():
 				rospy.logwarn(currently_avoiding_obstacle)
 				if currently_avoiding_obstacle != 1 :
 					reached_unblocked_entrance = K.Execute_Waypoint(exiting_x,exiting_y, K.enter_bldg_hgt, target_yaw)
+					if (abs(K.current_local_x-exiting_x))<3 and (abs(K.current_local_y-exiting_y))<3:
+						reached_unblocked_entrance=1
+
 
 				if reached_unblocked_entrance:
 					K.exit_bldg_flag = 1
