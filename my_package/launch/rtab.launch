@@ -33,7 +33,7 @@
   <arg name="gui_cfg"                 default="~/.ros/rtabmap_gui.ini" />
   <arg name="rviz_cfg"                default="$(find rtabmap_ros)/launch/config/rgbd.rviz" />
   
-  <arg name="frame_id"                default="front_link"/>     <!-- Fixed frame id, you may set "base_link" or "base_footprint" if they are published -->
+  <arg name="frame_id"                default="camera_link"/>     <!-- Fixed frame id, you may set "base_link" or "base_footprint" if they are published -->
   <arg name="odom_frame_id"           default=""/>                <!-- If set, TF is used to get odometry instead of the topic -->
   <arg name="map_frame_id"            default="map"/>
   <arg name="ground_truth_frame_id"   default=""/>     <!-- e.g., "world" -->
@@ -99,10 +99,6 @@
   <arg name="subscribe_user_data"      default="false"/>             <!-- user data synchronized subscription -->
   <arg name="user_data_topic"          default="/user_data"/>
   <arg name="user_data_async_topic"    default="/user_data_async" /> <!-- user data async subscription (rate should be lower than map update rate) -->
-  
-  <arg name="gps_topic"                default="/gps/fix" />         <!-- gps async subscription -->
-  
-  <arg name="tag_topic"                default="/tag_detections" />  <!-- apriltags async subscription -->
   
   <!-- These arguments should not be modified directly, see referred topics without "_relay" suffix above -->
   <arg if="$(arg compressed)"     name="rgb_topic_relay"           default="$(arg rgb_topic)_relay"/>
@@ -186,7 +182,6 @@
           <param name="guess_frame_id"              type="string" value="$(arg odom_guess_frame_id)"/>
           <param name="guess_min_translation"       type="double" value="$(arg odom_guess_min_translation)"/>
           <param name="guess_min_rotation"          type="double" value="$(arg odom_guess_min_rotation)"/>
-
           <param name="Odom/ResetCountdown"              value="1" />
         </node>
 
@@ -256,23 +251,15 @@
       <param name="odom_tf_linear_variance"  type="double" value="$(arg odom_tf_linear_variance)"/>
       <param name="odom_sensor_sync"         type="bool"   value="$(arg odom_sensor_sync)"/>
       <param name="wait_for_transform_duration"  type="double"   value="$(arg wait_for_transform)"/>
-      <param name="database_path"        type="string" value="$(arg database_path)"/>
+      <!--param unless="$(arg use_dynamic_name)" name="database_path"        type="string" value="$(arg database_path)"/-->
+
       <param name="approx_sync"          type="bool"   value="$(arg approx_sync)"/>
       <param name="config_path"          type="string" value="$(arg cfg)"/>
       <param name="queue_size"           type="int" value="$(arg queue_size)"/>
       <param name="scan_normal_k"        type="int" value="$(arg scan_normal_k)"/>
 
       <param name="Rtabmap/StartNewMapOnLoopClosure" value="false"/>
-      <!--param name="rgbd/bilateral"  value="true"/--> 
-      <!--param name="rgbd/bilateral_sigma_r" value="0.4"/-->
-      <!--param name="rgbd/bilateral_sigma_s" value="10"/-->
-      <!--param name="Map/ImageDecimation" value="1"/-->
-
-
-      <!--param name="Vis/MinInliers"                type="string"   value="10"/-->      <!-- 3D visual words minimum inliers to accept loop closure -->
-      <!--param name="Vis/MaxDepth"                  type="string"   value="2"/-->    
-
-
+      
       <remap from="rgb/image"       to="$(arg rgb_topic_relay)"/>
       <remap from="depth/image"     to="$(arg depth_topic_relay)"/>
       <remap from="rgb/camera_info" to="$(arg camera_info_topic)"/>
@@ -289,10 +276,8 @@
       <remap from="scan_cloud"             to="$(arg scan_cloud_topic)"/>
       <remap from="user_data"              to="$(arg user_data_topic)"/>
       <remap from="user_data_async"        to="$(arg user_data_async_topic)"/>
-      <remap from="gps/fix"                to="$(arg gps_topic)"/>
-      <remap from="tag_detections"         to="$(arg tag_topic)"/>
       <remap from="odom"                   to="$(arg odom_topic)"/>
-
+      
       <!-- localization mode -->
 	  <param     if="$(arg localization)" name="Mem/IncrementalMemory" type="string" value="false"/>
 	  <param unless="$(arg localization)" name="Mem/IncrementalMemory" type="string" value="true"/>

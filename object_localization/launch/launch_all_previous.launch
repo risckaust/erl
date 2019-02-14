@@ -30,9 +30,11 @@
 	<include file="$(find object_localization)/launch/object_localization.launch" />
 	
 	<!-- RS CAMERA -->
-	<include file="$(find realsense2_camera)/launch/multi.launch" />
+	<node pkg="tf" type="static_transform_publisher" name="fcu_to_down_rs_map_frame" args="0.25 0 -0.05 0 1.57 0 fcu down_link 10" />
+	<node pkg="tf" type="static_transform_publisher" name="fcu_to_front_rs_map_frame" args="0.25 0 -0.05 0 0 0 fcu front_link 10" />
+	<include file="$(find realsense2_camera)/launch/rs_multiple_devices.launch" />
     
-	<!-- YOLO ROS VINO -->
+	<!-- DARKNET -->
 	<include ns="person" file="$(find yolo_ros_vino)/launch/person_yolo_ros_vino.launch" />
 	<include ns="tags" file="$(find yolo_ros_vino)/launch/tags_yolo_ros_vino.launch" />
 

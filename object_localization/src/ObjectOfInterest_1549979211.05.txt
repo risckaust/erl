@@ -1,0 +1,14 @@
+
+Time Stamp (sec):
+46.0
+Target ID:
+Green Tag
+Target Position (Lat, Lon):
+(22.2971717452, 39.0936552747)
+
+Time Stamp (sec):
+100.0
+Target ID:
+Red Tag
+Target Position (Lat, Lon):
+(22.2971904252, 39.0937868855)

@@ -116,10 +116,10 @@ class Controller:
 		# self.start_state = 'WORKER1SEARCH'
 		# self.start_state = 'WORKER2SEARCH'
 		# self.start_state = 'LOADPACKAGE2'
-		self.start_state = 'WORKER2SEARCH'
+		# self.start_state = 'GOTOBUILDING'
 		# self.start_state = 'ENTRANCESEARCH'
-		# self.start_state = 'ENTERBUILDING'
-		# self.start_state = 'WORKER2SEARCH'
+		#self.start_state = 'ENTERBUILDING'
+		self.start_state = 'WORKER2SEARCH'
 		# self.start_state = 'MAPPING'
 
 		#############################################################
@@ -173,20 +173,12 @@ class Controller:
 		#############################################################################################
 		self.bldg_search_corner1_lat = 22.2971638 #22.3184444# Simulation: 47.3976247 # Looking down at the play-field, this corner is the top right
 		self.bldg_search_corner1_lon = 39.0936685 #39.1019761# Simulation: 8.5455773	# Looking down at the play-field, this corner is the top right
-		self.bldg_search_corner1_5_lat = 22.2971638 #22.3184444# Simulation: 47.3976247 # Looking down at the play-field, this corner is the top right
-		self.bldg_search_corner1_5_lon = 39.0936685 #39.1019761# Simulation: 8.5455773	# Looking down at the play-field, this corner is the top right
 		self.bldg_search_corner2_lat = 22.2973265 #22.3187271# Simulation: 47.3978486 # Looking down at the play-field, this corner is the top left
 		self.bldg_search_corner2_lon = 39.0940323 #39.1021202# Simulation: 8.5455894 # Looking down at the play-field, this corner is the top left
-		self.bldg_search_corner2_5_lat = 22.2971638 #22.3184444# Simulation: 47.3976247 # Looking down at the play-field, this corner is the top right
-		self.bldg_search_corner2_5_lon = 39.0936685 #39.1019761# Simulation: 8.5455773	# Looking down at the play-field, this corner is the top right
 		self.bldg_search_corner3_lat = 22.2975616 #22.3188133# Simulation: 47.3978593 # Looking down at the play-field, this corner is the bottom left
 		self.bldg_search_corner3_lon = 39.0939016 #39.1019476# Simulation: 8.5454345 # Looking down at the play-field, this corner is the bottom left
-		self.bldg_search_corner3_5_lat = 22.2971638 #22.3184444# Simulation: 47.3976247 # Looking down at the play-field, this corner is the top right
-		self.bldg_search_corner3_5_lon = 39.0936685 #39.1019761# Simulation: 8.5455773	# Looking down at the play-field, this corner is the top right
 		self.bldg_search_corner4_lat = 22.2973908 #22.3185138# Simulation: 47.3976353 # Looking down at the play-field, this corner is the bottom right
 		self.bldg_search_corner4_lon = 39.0935343 #39.1017642# Simulation: 8.5454157 # Looking down at the play-field, this corner is the bottom right
-		self.bldg_search_corner4_5_lat = 22.2971638 #22.3184444# Simulation: 47.3976247 # Looking down at the play-field, this corner is the top right
-		self.bldg_search_corner4_5_lon = 39.0936685 #39.1019761# Simulation: 8.5455773	# Looking down at the play-field, this corner is the top right
 		#############################################################################################
 
 		# Outside Worker Search Variables in GPS
@@ -415,20 +407,12 @@ class Controller:
 		# Positive x is downfield, positive y is to the left
 		self.entrance_search_corner1_x = 11.5#22#11.5 # Looking down at the play-field, this corner is the top right
 		self.entrance_search_corner1_y = -11.5#-12#-11.5 # Looking down at the play-field, this corner is the top right
-		self.entrance_search_corner1_5_x = 11.5#22#11.5 # Looking down at the play-field, this corner is the top right
-		self.entrance_search_corner1_5_y = 0#-12#-11.5 # Looking down at the play-field, this corner is the top right
 		self.entrance_search_corner2_x = 11.5#22#11.5 # Looking down at the play-field, this corner is the top left
 		self.entrance_search_corner2_y = 11.5#12#11.5 # Looking down at the play-field, this corner is the top left
-		self.entrance_search_corner2_5_x = 0#22#11.5 # Looking down at the play-field, this corner is the top right
-		self.entrance_search_corner2_5_y = 11.5#-12#-11.5 # Looking down at the play-field, this corner is the top right
 		self.entrance_search_corner3_x = -11.5#2#-11.5 # Looking down at the play-field, this corner is the bottom left
 		self.entrance_search_corner3_y = 11.5#12#11.5 # Looking down at the play-field, this corner is the bottom left
-		self.entrance_search_corner3_5_x = -11.5#22#11.5 # Looking down at the play-field, this corner is the top right
-		self.entrance_search_corner3_5_y = 0#-12#-11.5 # Looking down at the play-field, this corner is the top right
 		self.entrance_search_corner4_x = -11.5#2#-11.5 # Looking down at the play-field, this corner is the bottom right
 		self.entrance_search_corner4_y = -11.5#-12#-11.5 # Looking down at the play-field, this corner is the bottom right
-		self.entrance_search_corner4_5_x = 0#22#11.5 # Looking down at the play-field, this corner is the top right
-		self.entrance_search_corner4_5_y = -11.5#-12#-11.5 # Looking down at the play-field, this corner is the top right
 		self.entrance_search_z = 2
 
 		# Yaw angles so that drone will always face a side of the building. THIS ASSUMES CORNERS ARE PLACED ACCORDING TO GIVEN CONVENTION
@@ -437,30 +421,30 @@ class Controller:
 		self.yaw_bottom_z = atan2((self.entrance_search_corner1_y-self.entrance_search_corner4_y),(self.entrance_search_corner1_x-self.entrance_search_corner4_x))
 		self.yaw_left_z = atan2((self.entrance_search_corner1_y-self.entrance_search_corner2_y),(self.entrance_search_corner1_x-self.entrance_search_corner2_x))
 
-		self.building_entr1_x = 11.5#22
-		self.building_entr1_y = -6#-12
-		self.building_entr2_x = 11.5#22
+		self.building_entr1_x = 0#22
+		self.building_entr1_y = 0#-12
+		self.building_entr2_x = 0#22
 		self.building_entr2_y = 0
-		self.building_entr3_x = 11.5#22
-		self.building_entr3_y = 6#12
+		self.building_entr3_x = 0#22
+		self.building_entr3_y = 0#12
 
-		self.building_entr1_inside_x = 9
-		self.building_entr1_inside_y = -6
-		self.building_entr2_inside_x = 9
+		self.building_entr1_inside_x = 0
+		self.building_entr1_inside_y = 0
+		self.building_entr2_inside_x = 0
 		self.building_entr2_inside_y = 0
-		self.building_entr3_inside_x = 9
-		self.building_entr3_inside_y = 6
+		self.building_entr3_inside_x = 0
+		self.building_entr3_inside_y = 0
 
 		self.yaw_building_entr1 = self.yaw_top_z
 		self.yaw_building_entr2 = self.yaw_top_z
 		self.yaw_building_entr3 = self.yaw_top_z
 
-		self.current_side = 'Top'
+		self.current_side = 'None'
 
 		# Variables to handle transitions within the state (i.e. reaching the updated yaw position before actually heading to the next corner)
 		self.entrance_number_search = 1
 		self.building_scan_WP_FLAG = 1.5
-		self.entrance_search_WPS_FLAG = 0
+		self.entrance_search_WPS_FLAG = [0, 0, 0]
 
 		self.red_tag = RedTag()
 		self.blue_tag = BlueTag()
@@ -481,11 +465,9 @@ class Controller:
 		self.ready2captureblue = 0
 		self.ready2capturegreen = 0
 
-		self.unblocked_entrance = 0
+		self.unblocked_entrance = 1
 		self.unblocked_entrance_x = 0
 		self.unblocked_entrance_y = 0
-
-		self.entrance_search_counter = 0
 
 		#----------------ENTER BUILDING VARIABLES-----------------#
 		###########################################################
@@ -783,10 +765,10 @@ class Controller:
 		# self.z_limit_warn = self.z_limit - .5
 
 		## Should be very close to (0,0) in local coordinate frame
-		# self.landing_zone_x, self.landing_zone_y, _ = pm.geodetic2enu(self.landing_zone_lat, self.landing_zone_lon, self.z_limit, self.current_lat, self.current_lon, self.current_alt)##########################################################################################################################
+		self.landing_zone_x, self.landing_zone_y, _ = pm.geodetic2enu(self.landing_zone_lat, self.landing_zone_lon, self.z_limit, self.current_lat, self.current_lon, self.current_alt)
 
 		self.waypoint1_x, self.waypoint1_y, _ = pm.geodetic2enu(self.waypoint1_lat, self.waypoint1_lon, self.waypoint1_alt, self.current_lat, self.current_lon, self.current_alt)
-		self.waypoint2_x, self.waypoint2_y, _ = pm.geodetic2enu(self.waypoint2_lat, self.waypoint2_lon, self.waypoint2_alt, self.current_lat, self.current_lon, self.current_alt)######################################################################################################################################################
+		self.waypoint2_x, self.waypoint2_y, _ = pm.geodetic2enu(self.waypoint2_lat, self.waypoint2_lon, self.waypoint2_alt, self.current_lat, self.current_lon, self.current_alt)
 		self.waypoint3_x, self.waypoint3_y, _ = pm.geodetic2enu(self.waypoint3_lat, self.waypoint3_lon, self.waypoint3_alt, self.current_lat, self.current_lon, self.current_alt)
 		self.waypoint4_x, self.waypoint4_y, _ = pm.geodetic2enu(self.waypoint4_lat, self.waypoint4_lon, self.waypoint4_alt, self.current_lat, self.current_lon, self.current_alt)
 		rospy.loginfo('Successfully set waypoints to x,y,z')
@@ -794,36 +776,32 @@ class Controller:
 		self.worker1_search_WP1_x, self.worker1_search_WP1_y, _ = pm.geodetic2enu(self.worker1_search_WP1_lat, self.worker1_search_WP1_lon, self.worker1_search_z, self.current_lat, self.current_lon, self.current_alt)
 		self.worker1_search_WP2_x, self.worker1_search_WP2_y, _ = pm.geodetic2enu(self.worker1_search_WP2_lat, self.worker1_search_WP2_lon, self.worker1_search_z, self.current_lat, self.current_lon, self.current_alt)
 		self.worker1_search_WP3_x, self.worker1_search_WP3_y, _ = pm.geodetic2enu(self.worker1_search_WP3_lat, self.worker1_search_WP3_lon, self.worker1_search_z, self.current_lat, self.current_lon, self.current_alt)
-		self.worker1_search_WP4_x, self.worker1_search_WP4_y, _ = pm.geodetic2enu(self.worker1_search_WP4_lat, self.worker1_search_WP4_lon, self.worker1_search_z, self.current_lat, self.current_lon, self.current_alt)##########################################################################################################################
+		self.worker1_search_WP4_x, self.worker1_search_WP4_y, _ = pm.geodetic2enu(self.worker1_search_WP4_lat, self.worker1_search_WP4_lon, self.worker1_search_z, self.current_lat, self.current_lon, self.current_alt)
 		self.worker1_search_WP5_x, self.worker1_search_WP5_y, _ = pm.geodetic2enu(self.worker1_search_WP5_lat, self.worker1_search_WP5_lon, self.worker1_search_z, self.current_lat, self.current_lon, self.current_alt)
 		self.worker1_search_WP6_x, self.worker1_search_WP6_y, _ = pm.geodetic2enu(self.worker1_search_WP6_lat, self.worker1_search_WP6_lon, self.worker1_search_z, self.current_lat, self.current_lon, self.current_alt)
 		self.worker1_search_WP7_x, self.worker1_search_WP7_y, _ = pm.geodetic2enu(self.worker1_search_WP7_lat, self.worker1_search_WP7_lon, self.worker1_search_z, self.current_lat, self.current_lon, self.current_alt)
 		self.worker1_search_WP8_x, self.worker1_search_WP8_y, _ = pm.geodetic2enu(self.worker1_search_WP8_lat, self.worker1_search_WP8_lon, self.worker1_search_z, self.current_lat, self.current_lon, self.current_alt)
 
 		self.building_center_x, self.building_center_y, _ = pm.geodetic2enu(self.building_center_lat, self.building_center_lon, self.z_limit, self.current_lat, self.current_lon, self.current_alt)
-		
+
 		# #----- UNCOMMENT THIS ONLY IF YOU WANT TO SPECIFY LOCAL ENTRANCE SEARCH PATH BASED ON GPS LOCATIONS OF CORNERs OF SQUARE PATH INSTEAD OF BUILDING CENTER POINT ------ #
 		self.entrance_search_corner1_x, self.entrance_search_corner1_y, _ = pm.geodetic2enu(self.bldg_search_corner1_lat, self.bldg_search_corner1_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
-		self.entrance_search_corner1_5_x, self.entrance_search_corner1_5_y, _ = pm.geodetic2enu(self.bldg_search_corner1_5_lat, self.bldg_search_corner1_5_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
-		self.entrance_search_corner2_x, self.entrance_search_corner2_y, _ = pm.geodetic2enu(self.bldg_search_corner2_lat, self.bldg_search_corner2_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)##################################################################################################################
-		self.entrance_search_corner2_5_x, self.entrance_search_corner2_5_y, _ = pm.geodetic2enu(self.bldg_search_corner2_5_lat, self.bldg_search_corner2_5_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
+		self.entrance_search_corner2_x, self.entrance_search_corner2_y, _ = pm.geodetic2enu(self.bldg_search_corner2_lat, self.bldg_search_corner2_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
 		self.entrance_search_corner3_x, self.entrance_search_corner3_y, _ = pm.geodetic2enu(self.bldg_search_corner3_lat, self.bldg_search_corner3_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
-		self.entrance_search_corner3_5_x, self.entrance_search_corner3_5_y, _ = pm.geodetic2enu(self.bldg_search_corner3_5_lat, self.bldg_search_corner3_5_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
 		self.entrance_search_corner4_x, self.entrance_search_corner4_y, _ = pm.geodetic2enu(self.bldg_search_corner4_lat, self.bldg_search_corner4_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
-		self.entrance_search_corner4_5_x, self.entrance_search_corner4_5_y, _ = pm.geodetic2enu(self.bldg_search_corner4_5_lat, self.bldg_search_corner4_5_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
-
+		
 		self.yaw_top_z = atan2((self.entrance_search_corner4_y-self.entrance_search_corner1_y),(self.entrance_search_corner4_x-self.entrance_search_corner1_x))
 		self.yaw_right_z = atan2((self.entrance_search_corner2_y-self.entrance_search_corner1_y),(self.entrance_search_corner2_x-self.entrance_search_corner1_x))
-		self.yaw_bottom_z = atan2((self.entrance_search_corner1_y-self.entrance_search_corner4_y),(self.entrance_search_corner1_x-self.entrance_search_corner4_x))##########################################################################################################################
+		self.yaw_bottom_z = atan2((self.entrance_search_corner1_y-self.entrance_search_corner4_y),(self.entrance_search_corner1_x-self.entrance_search_corner4_x))
 		self.yaw_left_z = atan2((self.entrance_search_corner1_y-self.entrance_search_corner2_y),(self.entrance_search_corner1_x-self.entrance_search_corner2_x))
 		#-------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
 
 		self.building_entr1_x, self.building_entr1_y, _ = pm.geodetic2enu(self.building_entr1_lat, self.building_entr1_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
-		self.building_entr2_x, self.building_entr2_y, _ = pm.geodetic2enu(self.building_entr2_lat, self.building_entr2_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)##########################################################################################################################
+		self.building_entr2_x, self.building_entr2_y, _ = pm.geodetic2enu(self.building_entr2_lat, self.building_entr2_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
 		self.building_entr3_x, self.building_entr3_y, _ = pm.geodetic2enu(self.building_entr3_lat, self.building_entr3_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
 
 		self.building_entr1_inside_x, self.building_entr1_inside_y, _ = pm.geodetic2enu(self.building_entr1_inside_lat, self.building_entr1_inside_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
-		self.building_entr2_inside_x, self.building_entr2_inside_y, _ = pm.geodetic2enu(self.building_entr2_inside_lat, self.building_entr2_inside_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)#################################################################################################
+		self.building_entr2_inside_x, self.building_entr2_inside_y, _ = pm.geodetic2enu(self.building_entr2_inside_lat, self.building_entr2_inside_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
 		self.building_entr3_inside_x, self.building_entr3_inside_y, _ = pm.geodetic2enu(self.building_entr3_inside_lat, self.building_entr3_inside_lon, 1.5, self.current_lat, self.current_lon, self.current_alt)
 
 		# THESE WILL NEED TO BE UPDATED DEPENDING ON WHERE THE ENTRANCES ARE
@@ -985,7 +963,7 @@ class Controller:
 					rospy.loginfo("Going Left")
 					self.positionSp.pose.position.x = self.current_local_x
 					self.positionSp.pose.position.y = self.current_local_y
-					self.positionSp.pose.position.z = self.worker1_search_z
+					self.positionSp.pose.position.z = self.positionSp.pose.position.z
 					yaw = angle
 					quaternion = quaternion_from_euler(0, 0, yaw)
 					self.positionSp.pose.orientation = Quaternion(*quaternion)
@@ -997,7 +975,7 @@ class Controller:
 
 					self.positionSp.pose.position.x = self.positionSp.pose.position.x-1
 					self.positionSp.pose.position.y = self.positionSp.pose.position.y+20
-					self.positionSp.pose.position.z = self.worker1_search_z
+					self.positionSp.pose.position.z = self.positionSp.pose.position.z
 				
 
 					self.tf_listener.waitForTransform("/fcu", "/local_origin", rospy.Time.now(), rospy.Duration(10.0))
@@ -1018,13 +996,13 @@ class Controller:
 					rospy.loginfo("Going Right")
 					self.positionSp.pose.position.x = self.current_local_x
 					self.positionSp.pose.position.y = self.current_local_y
-					self.positionSp.pose.position.z = self.worker1_search_z
+					self.positionSp.pose.position.z = self.positionSp.pose.position.z
 					self.tf_listener.waitForTransform("/fcu", "/local_origin", rospy.Time.now(), rospy.Duration(10.0))
 					self.positionSp = self.tf_listener.transformPose("/fcu", self.positionSp)
 
 					self.positionSp.pose.position.x = self.positionSp.pose.position.x-1
 					self.positionSp.pose.position.y = self.positionSp.pose.position.y-20
-					self.positionSp.pose.position.z = self.worker1_search_z
+					self.positionSp.pose.position.z = self.positionSp.pose.position.z
 				
 				
 					self.tf_listener.waitForTransform("/fcu", "/local_origin", rospy.Time.now(), rospy.Duration(10.0))
@@ -1101,8 +1079,10 @@ class Controller:
 
 			if self.building_scan_WP_FLAG == 1.5:
 				self.current_side = 'Top'
+				midpoint_y = (self.entrance_search_corner2_y+self.entrance_search_corner1_y)/2
+				midpoint_x = (self.entrance_search_corner2_x+self.entrance_search_corner1_x)/2
 				rospy.loginfo("Searching Midpoint")
-				reached_entrance_search_WP2_Midpoint = self.Execute_Waypoint(self.entrance_search_corner1_5_x, self.entrance_search_corner1_5_y, self.entrance_search_z, self.yaw_top_z)
+				reached_entrance_search_WP2_Midpoint = self.Execute_Waypoint(midpoint_x, midpoint_y, self.entrance_search_z, self.yaw_top_z)
 				if reached_entrance_search_WP2_Midpoint:
 					self.building_scan_WP_FLAG = 2
 
@@ -1122,7 +1102,7 @@ class Controller:
 				################################################################################################
 
 				if reached_entrance_search_WP2:
-					rospy.sleep(1)
+					rospy.sleep(3)
 					self.building_scan_WP_FLAG = 2.5
 
 					#--------THIS IS SO I COULD GET THE GPS LOCATION AT THIS CORNER FROM THE LOG FILE---------#
@@ -1132,8 +1112,10 @@ class Controller:
 		
 			elif self.building_scan_WP_FLAG == 2.5:
 				self.current_side = 'Left'
+				midpoint_y = (self.entrance_search_corner3_y+self.entrance_search_corner2_y)/2
+				midpoint_x = (self.entrance_search_corner3_x+self.entrance_search_corner2_x)/2
 				rospy.loginfo("Searching Midpoint")
-				reached_entrance_search_WP3_Midpoint = self.Execute_Waypoint(self.entrance_search_corner2_5_x, self.entrance_search_corner2_5_y, self.entrance_search_z, self.yaw_left_z)
+				reached_entrance_search_WP3_Midpoint = self.Execute_Waypoint(midpoint_x, midpoint_y, self.entrance_search_z, self.yaw_left_z)
 				if reached_entrance_search_WP3_Midpoint:
 					self.building_scan_WP_FLAG = 3
 
@@ -1143,7 +1125,7 @@ class Controller:
 				reached_entrance_search_WP3 = self.Execute_Waypoint(self.entrance_search_corner3_x, self.entrance_search_corner3_y, self.entrance_search_z, self.yaw_left_z)
 
 				if reached_entrance_search_WP3:
-					rospy.sleep(1)
+					rospy.sleep(3)
 					self.building_scan_WP_FLAG = 3.5
 
 					#--------THIS IS SO I COULD GET THE GPS LOCATION AT THIS CORNER FROM THE LOG FILE---------#
@@ -1153,8 +1135,10 @@ class Controller:
 
 			elif self.building_scan_WP_FLAG == 3.5:
 				self.current_side = 'Bottom'
+				midpoint_y = (self.entrance_search_corner4_y+self.entrance_search_corner3_y)/2
+				midpoint_x = (self.entrance_search_corner4_x+self.entrance_search_corner3_x)/2
 				rospy.loginfo("Searching Midpoint")
-				reached_entrance_search_WP4_Midpoint = self.Execute_Waypoint(self.entrance_search_corner3_5_x, self.entrance_search_corner3_5_y, self.entrance_search_z, self.yaw_bottom_z)
+				reached_entrance_search_WP4_Midpoint = self.Execute_Waypoint(midpoint_x, midpoint_y, self.entrance_search_z, self.yaw_bottom_z)
 				if reached_entrance_search_WP4_Midpoint:
 					self.building_scan_WP_FLAG = 4
 		
@@ -1172,7 +1156,7 @@ class Controller:
 				###############################################################################################
 
 				if reached_entrance_search_WP4:
-					rospy.sleep(1)
+					rospy.sleep(3)
 					self.building_scan_WP_FLAG = 0.5
 
 					#--------THIS IS SO I COULD GET THE GPS LOCATION AT THIS CORNER FROM THE LOG FILE---------#
@@ -1182,8 +1166,10 @@ class Controller:
 
 			elif self.building_scan_WP_FLAG == 0.5:
 				self.current_side = 'Right'
+				midpoint_x = (self.entrance_search_corner1_x+self.entrance_search_corner4_x)/2#####################################################################################################################################
+				midpoint_y = (self.entrance_search_corner1_y+self.entrance_search_corner4_y)/2
 				rospy.loginfo("Searching Midpoint")
-				reached_entrance_search_WP1_Midpoint = self.Execute_Waypoint(self.entrance_search_corner4_5_x, self.entrance_search_corner4_5_y, self.entrance_search_z, self.yaw_right_z)
+				reached_entrance_search_WP1_Midpoint = self.Execute_Waypoint(midpoint_x, midpoint_y, self.entrance_search_z, self.yaw_right_z)
 				
 				if reached_entrance_search_WP1_Midpoint:
 					self.building_scan_WP_FLAG = 1
@@ -1220,20 +1206,13 @@ class Controller:
 		if (minfront < backoff_distance and minfront>.3):
 			print("VERY CLOSE STAY AWAY")
 			too_far_off_path = 1
-			self.dx=-20
+			self.dx=-2
 			self.dy=0
-			if current_side == 'Top':
-				self.target_yaw = self.yaw_top_z
-			elif current_side == 'Left':
-				self.target_yaw = self.yaw_left_z
-			elif current_side == 'Bottom':
-				self.target_yaw = self.yaw_bottom_z
-			elif current_side == 'Right':
-				self.target_yaw = self.yaw_right_z
-
 			self.positionSp.pose.position.x=self.dx*math.cos(self.target_yaw)-self.dy*math.sin(self.target_yaw)+self.current_local_x
 			self.positionSp.pose.position.y=self.dx*math.sin(self.target_yaw)+self.dy*math.cos(self.target_yaw)+self.current_local_y
-
+			self.target_yaw = math.atan2((self.positionSp.pose.position.y-self.current_local_y),(self.positionSp.pose.position.x-self.current_local_x))
+			quaternion = quaternion_from_euler(0, 0, self.target_yaw)
+			self.positionSp.pose.orientation = Quaternion(*quaternion)  
 
 
 
@@ -1301,21 +1280,35 @@ class Controller:
 
 
 		if too_far_off_path != 1:
+		
 
-			if (self.entrance_search_WPS_FLAG == 0):
+			if (self.entrance_search_WPS_FLAG[0] == 0):
+				self.positionSp.header.frame_id = 'local_origin'
+				self.positionSp.pose.position.z = self.entrance_search_z
 
-				head_to_entrance = self.Execute_Waypoint(entrance_x,entrance_y,self.entrance_search_z,self.yaw_top_z)
-				
-				if head_to_entrance:
-					
-					self.entrance_search_WPS_FLAG = 1
+				if abs(self.current_local_z-self.positionSp.pose.position.z)<0.5:
+					self.positionSp.header.frame_id = 'local_origin'
+					self.positionSp.pose.position.x = entrance_x
+					self.positionSp.pose.position.y = entrance_y
 
-			elif (self.entrance_search_WPS_FLAG == 1):
-					head_to_entrance = self.Execute_Waypoint(entrance_x,entrance_y,self.entrance_search_z,self.yaw_top_z)
+					self.entrance_search_WPS_FLAG[0] = 1
+
+			elif (self.entrance_search_WPS_FLAG[1] == 0):
+
+				if abs(self.current_local_x-entrance_x)<.5 and abs(self.current_local_y-entrance_y)<.5:
+					self.positionSp.header.frame_id = 'local_origin'
+					self.positionSp.pose.position.z = self.entrance_search_z
+
+					quaternion_yaw = quaternion_from_euler(0, 0, entrance_view_angle)
+					self.positionSp.pose.orientation = Quaternion(*quaternion_yaw)
+					self.entrance_search_WPS_FLAG[1] = 1
+
+			elif (self.entrance_search_WPS_FLAG[2] == 0):
+
+				if abs(self.current_local_z-self.entrance_search_z)<.1 and abs(self.current_yaw-entrance_view_angle) < 0.2:
 					rospy.loginfo('Checking entrance to see what the color of the tag is')
-					if self.entrance_search_counter > 80:
-						self.entrance_search_WPS_FLAG = 2
 
+					while entrance_search_counter < 80:
 
 						#----------THIS IS SO I COULD GET THE GPS LOCATION AT THIS CORNER FROM THE LOG FILE-------------#
 						#################################################################################################
@@ -1325,20 +1318,19 @@ class Controller:
 						# 	self.tag_info.x = self.current_local_x
 						# 	self.tag_info.y = self.current_local_y
 						#################################################################################################
-					else:
+
 						self.verifyTag()
-						self.entrance_search_counter = self.entrance_search_counter + 1
+						entrance_search_counter = entrance_search_counter + 1
 
-						#-------THIS IS SO I COULD GET THE GPS LOCATION AT THIS Location FROM THE LOG FILE--------#
-						###########################################################################################
-						self.current_signal = "Checking possible unblocked entrance"
-						###########################################################################################
+					#-------THIS IS SO I COULD GET THE GPS LOCATION AT THIS Location FROM THE LOG FILE--------#
+					###########################################################################################
+					self.current_signal = "Checking possible unblocked entrance"
+					###########################################################################################
 
-					
+					self.entrance_search_WPS_FLAG[2] = 1
 			else:
 				rospy.loginfo('Could not find tag at current entrance')
-				self.entrance_search_WPS_FLAG = 0
-				self.entrance_search_counter = 0
+				self.entrance_search_WPS_FLAG = [0, 0, 0]
 				self.entrance_number_search = self.entrance_number_search + 1
 
 	def verifyTag(self):
@@ -1664,7 +1656,6 @@ class Controller:
 						self.positionSp.pose.position.y = self.avoid_y
 						self.positionSp.pose.position.z = self.indoor_hgt
 						self.positionSp.header.frame_id = 'local_origin'
-						self.target_yaw= math.atan2((self.positionSp.pose.position.y-self.current_local_y),(self.positionSp.pose.position.x-self.current_local_x))
 						quaternion = quaternion_from_euler(0, 0, self.target_yaw)
 						self.positionSp.pose.orientation = Quaternion(*quaternion)
 						self.avoidancepar = 4
@@ -1674,7 +1665,6 @@ class Controller:
 						self.positionSp.pose.position.y = self.avoid_y
 						self.positionSp.pose.position.z = self.indoor_hgt
 						self.positionSp.header.frame_id = 'local_origin'
-						self.target_yaw= math.atan2((self.positionSp.pose.position.y-self.current_local_y),(self.positionSp.pose.position.x-self.current_local_x))
 						quaternion = quaternion_from_euler(0, 0, self.target_yaw)
 						self.positionSp.pose.orientation = Quaternion(*quaternion)
 						self.avoidancepar = 4
@@ -1684,7 +1674,6 @@ class Controller:
 						self.positionSp.pose.position.y = self.avoid_y
 						self.positionSp.pose.position.z = self.indoor_hgt
 						self.positionSp.header.frame_id = 'local_origin'
-						self.target_yaw= math.atan2((self.positionSp.pose.position.y-self.current_local_y),(self.positionSp.pose.position.x-self.current_local_x))
 						quaternion = quaternion_from_euler(0, 0, self.target_yaw)
 						self.positionSp.pose.orientation = Quaternion(*quaternion)
 						self.avoidancepar = 4
@@ -1694,7 +1683,6 @@ class Controller:
 						self.positionSp.pose.position.y = self.avoid_y
 						self.positionSp.pose.position.z = self.indoor_hgt
 						self.positionSp.header.frame_id = 'local_origin'
-						self.target_yaw= math.atan2((self.positionSp.pose.position.y-self.current_local_y),(self.positionSp.pose.position.x-self.current_local_x))
 						quaternion = quaternion_from_euler(0, 0, self.target_yaw)
 						self.positionSp.pose.orientation = Quaternion(*quaternion)
 						self.avoidancepar = 4
@@ -2459,7 +2447,7 @@ def main():
 	rospy.Subscriber("/detected_blue_tag", PoseStamped, K.bluetagPoseCb)
 	rospy.Subscriber("/detected_green_tag", PoseStamped, K.greentagPoseCb)
 	# Subscriber: Worker Images
-	rospy.Subscriber("/down/camera/color/image_raw", Image, K.WorkerImageCb)
+	rospy.Subscriber("/down/camera/color/image_raw", Image, K.WorkerImageCb) ######################################################################################################################################################################################3
 	# Subscriber: Color Tag Images:
 	rospy.Subscriber("/front/camera/color/image_raw", Image, K.TagImageCb)
 
@@ -2469,7 +2457,7 @@ def main():
 	rospy.Subscriber("mavros/local_position/pose", PoseStamped, K.transformationoffcu)
 	# FOR RPLIDAR
 	# USE /scan FOR ACTUAL TESTING!!! USE /laser/scan FOR SIMULATION
-	rospy.Subscriber("/laser/scan", LaserScan, K.rangessCb)#################################################################################################################################################################################################################
+	rospy.Subscriber("/scan", LaserScan, K.rangessCb)
 	####################################################################################################
 
 	########## Publishers ##########
@@ -2890,8 +2878,8 @@ def main():
 			K.current_signal = 'Running'
 			rospy.loginfo('Headed to building for entrance search')
 
-			# reached_building = K.Execute_Waypoint(K.entrance_search_corner1_x, K.entrance_search_corner1_y, K.entrance_search_z, -1000)#############################################################################################################################
-			reached_building = K.Execute_Waypoint(K.entrance_search_corner1_x, K.entrance_search_corner1_y, 7, -1000)
+			reached_building = K.Execute_Waypoint(K.entrance_search_corner1_x, K.entrance_search_corner1_y, K.entrance_search_z, -1000)
+			
 			if reached_building:
 				K.current_signal = 'Reached Building'
 				K.resetStates()
@@ -2908,6 +2896,7 @@ def main():
 			rospy.logwarn(K.green_tag.found)
 			rospy.logwarn('Completed full rev?')
 			rospy.logwarn(K.completed_full_rev)
+
 			if (K.green_tag.found == 1) and (K.completed_full_rev == 1):
 				rospy.loginfo('Unblocked entrance successfully found!')
 				K.resetStates()
@@ -3015,7 +3004,7 @@ def main():
 				K.current_signal = 'Aid Delivered'
 				K.resetStates()
 				K.MAPPING = 1
-				K.path_flag = 'Right'
+				K.path_flag = 'Center'
 				K.current_r = 6
 
 		elif K.MAPPING:

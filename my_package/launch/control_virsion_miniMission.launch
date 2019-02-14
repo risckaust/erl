@@ -1,17 +1,22 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="utf-8"?>
+
 
 <launch>
     <!-- RTAB-map Node-->
     <param name="dynamic_time_stamp"        command="$(find my_package)/launch/timestamp.sh"/>
-    <include file="$(find my_package)/launch/rtab.launch">
-        <arg name="rtabmap_args"		        value="--delete_db_on_start"/>
+    <include file="$(find my_package)/launch/rtabmap.launch" >       
+	<arg name="rtabmap_args" 	value="--delete_db_on_start" />
 	<arg name="depth_topic" 	value= "/front/camera/depth/image_rect_raw" />
 	<arg name="rgb_topic" 		value= "/front/camera/color/image_raw" />
 	<arg name="camera_info_topic" value= "/front/camera/color/camera_info" />
-        <arg name="approx_sync"                 value="true"/>
-        <arg name="rtabmapviz"                  value="true"/>
+   	<arg name="approx_sync" 	value="true" />
+	<arg name="rtabmapviz" 		value="true" />
+	<!--arg name="database_path" 	value="~/Documents/RTAB-Map/1.db"/-->
         <arg name="use_dynamic_name"            value="true"/>
-        <arg name="frame_id"                    value="front_link"/>
-    </include>
+	
+    </include>  
+
+
 </launch>
+
 

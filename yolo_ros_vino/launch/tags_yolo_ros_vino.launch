@@ -7,9 +7,9 @@
         <param name="model_xml"             value="/home/risc/OpenVINO-YoloV3/ir_models/tiny-YoloV3/FP32/yolov3_tiny_tags.xml"/>
         <param name="model_bin"             value="/home/risc/OpenVINO-YoloV3/ir_models/tiny-YoloV3/FP32/yolov3_tiny_tags.bin"/>
         <param name="model_labels"          value="/home/risc/OpenVINO-YoloV3/labels/yolov3_tiny_tags.labels"/>
-        <!--param name="model_xml"             value="$(find yolo_ros_vino)/models/FP32/yolov3_tiny_tags.xml"/>
-        <param name="model_bin"             value="$(find yolo_ros_vino)/models/FP32/yolov3_tiny_tags.bin"/>
-        <param name="model_labels"          value="$(find yolo_ros_vino)/models/FP32/yolov3_tiny_tags.labels"/-->
+        <!--param name="model_xml"             value="$(find yolo_ros_vino)/models/FP32/yolov3_tiny_tags.xml"/-->
+        <!--param name="model_bin"             value="$(find yolo_ros_vino)/models/FP32/yolov3_tiny_tags.bin"/-->
+        <!--param name="model_labels"          value="$(find yolo_ros_vino)/models/FP32/yolov3_tiny_tags.labels"/-->
 
         <param name="neural_compute_stick"  value="false"/>
         <param name="camera_topic"          value="/front/camera/color/image_raw"/>

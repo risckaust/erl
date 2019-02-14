@@ -1,0 +1,14 @@
+
+Time Stamp (sec):
+78.0
+Target ID:
+Inside Worker
+Target Position (Lat, Lon):
+(22.2974059632, 39.0938127303)
+
+Time Stamp (sec):
+78.0
+Target ID:
+Inside Worker
+Target Position (Lat, Lon):
+(22.2974059632, 39.0938127303)
