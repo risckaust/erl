@@ -2,7 +2,7 @@
 
 <launch>
     <node pkg="yolo_ros_vino" type="yolo_ros_vino_node" name="yolo_ros_vino" output="screen">
-        <param name="model_thresh"          value="0.8"/>
+        <param name="model_thresh"          value="0.25"/>
         <param name="model_iou_thresh"      value="0.4"/>
         <param name="model_xml"             value="/home/risc/OpenVINO-YoloV3/ir_models/tiny-YoloV3/FP32/yolov3_tiny_person.xml"/>
         <param name="model_bin"             value="/home/risc/OpenVINO-YoloV3/ir_models/tiny-YoloV3/FP32/yolov3_tiny_person.bin"/>

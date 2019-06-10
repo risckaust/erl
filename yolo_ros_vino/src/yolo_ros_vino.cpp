@@ -320,6 +320,8 @@ void YoloRosVino::callback(const sensor_msgs::ImageConstPtr& current_image)
                 continue;
             auto label = object.class_id;
             float confidence = object.confidence;
+            
+            ROS_INFO("[YoloRosVino] %s tag (%.2f%%)", this->labels_[label].c_str(), confidence*100);
 
             if (viewResult_){
                 std::ostringstream conf;

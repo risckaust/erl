@@ -1,7 +1,7 @@
 # yolo_ros_vino
 
 An implemntation of YOLO object detection with a ROS interface and enhanced processor utilization (40-20 fps) using OpenVINO model optimization tools. The work is based on [this](https://github.com/PINTO0309/OpenVINO-YoloV3) and [this](
-https://github.com/leggedrobotics/darknet_ros)..
+https://github.com/leggedrobotics/darknet_ros).
 
 
 

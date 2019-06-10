@@ -30,7 +30,7 @@
 	<include file="$(find object_localization)/launch/object_localization.launch" />
 	
 	<!-- RS CAMERA -->
-	<include file="$(find realsense2_camera)/launch/multi.launch" />
+	<!--include file="$(find realsense2_camera)/launch/multi.launch" /-->
     
 	<!-- YOLO ROS VINO -->
 	<include ns="person" file="$(find yolo_ros_vino)/launch/person_yolo_ros_vino.launch" />
